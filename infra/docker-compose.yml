@@ -9,7 +9,9 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-onemore}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-onemore_dev}
     ports:
-      - "5432:5432"
+      # Só em localhost (nunca na rede). Porta do host configurável; 5433 por padrão para não colidir
+      # com um PostgreSQL nativo na 5432.
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:

@@ -1,0 +1,12 @@
+# Perfil de desenvolvimento local (ativado só por `./mvnw spring-boot:run`, ver pom.xml).
+# Defaults iguais ao infra/docker-compose.yml; variáveis de ambiente continuam tendo prioridade.
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/onemore}
+    username: ${SPRING_DATASOURCE_USERNAME:onemore}
+    password: ${SPRING_DATASOURCE_PASSWORD:onemore_dev}
+
+management:
+  endpoint:
+    health:
+      show-details: always
