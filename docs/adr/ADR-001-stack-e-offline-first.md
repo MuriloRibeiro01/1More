@@ -8,7 +8,7 @@
    permite módulos nativos (WatermelonDB, notificações, keep-awake).
 2. **WatermelonDB** como banco local: protocolo pull/push pronto, que mapeia direto para
    `/api/v1/sync/pull` e `/api/v1/sync/push` no Spring Boot.
-3. **Spring Boot 3.x + Java 17 + Maven wrapper** (JDK 17 é o instalado na máquina).
+3. **Spring Boot 3.x + Java 17 + Maven wrapper** (JDK 17 é o instalado na máquina). *(Substituído em parte pelo [ADR-002](ADR-002-spring-boot-4.md): Spring Boot 4.0.x a partir da T-001b.)*
 4. **PostgreSQL 16** via Docker Compose em dev; **Testcontainers** nos testes de integração.
 5. **Auth:** access token JWT curto + refresh token; no app, armazenados com `expo-secure-store`
    (Keychain/Keystore). Token expirado pausa o sync, nunca o uso do app (RF-05).
