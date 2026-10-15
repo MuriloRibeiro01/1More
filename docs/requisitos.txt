@@ -1,0 +1,736 @@
+App de Treino — Pesquisa de Mercado e
+Levantamento de Requisitos
+ Oct 14, 2026  · @Murilo
+Sumário executivo
+Os líderes do mercado (Hevy e Strong) vencem por registro rápido de séries e plano
+gratuito generoso; as frustrações que mais se repetem são treino perdido ou travado por
+falta de rede, crashes no meio do treino, paywall agressivo e interface que muda demais.
+O app proposto ataca exatamente essas dores com quatro apostas:
+Offline-first de verdade: cada série é gravada no dispositivo no momento do toque; a
+nuvem é cópia, nunca pré-requisito para salvar ou finalizar.
+Registro em até 2 toques por série, com valores da última sessão pré-preenchidos.
+Gamificação opcional e não punitiva: streak semanal com congelamento, XP e ranks
+que nunca bloqueiam funcionalidade nem exigem foto ou compartilhamento.
+Núcleo gratuito para sempre: registro, rotinas e histórico ilimitados, exportação de
+dados sempre livre.
+Stack-alvo: React Native no cliente, Spring Boot no backend e PostgreSQL no servidor,
+com SQLite local e protocolo de sincronização pull/push.
+Pesquisa de satisfação
+Hevy (4,5) e Strong (4,3) lideram a satisfação geral; Liftoff tem a melhor gamificação do
+mercado, mas perde pontos em performance e na dependência de internet para finalizar o
+treino.
+Como as notas foram montadas: síntese qualitativa (escala 1 a 5) de agregadores de
+Reddit (GummySearch: 239 reviews em 39 subreddits, r/Hevy), avaliações de App
+Store/Google Play, sites de review e fóruns de produto. A nota da loja é dado público; as
+notas por critério são estimativa do autor a partir do volume e do teor das reclamações e
+elogios. Notas de loja ficam todas entre 4,8 e 4,9 e quase não diferenciam os apps, por isso
+o peso maior foi dado ao texto das reviews.
+App de Treino — Pesquisa de Mercado e Levantamento de Requisitos
+Page 1 of 18App Nota loja iOS
+(nº
+avaliações)
+Praticidade Performance Design UX Gamificação Overall O que mais elogiam /
+criticam
+Hevy 4,9 (65 mil) 5 4 4,5 4,5 3,5 4,5 Logging rápido,
+melhor plano grátis,
+feed social / free
+limitado a 4 rotinas e
+3 meses de histórico,
+falhas de sync com
+relógio
+Strong 4,9 (108 mil) 5 4 3,5 4,5 1,5 4,3 Minimalista, melhor
+export CSV, app de
+relógio
+independente /
+visual datado,
+relatos de treinos
+perdidos, sem
+orientação
+Boostcamp — 4 4 4 4 2 4,2 11 mil+ programas
+grátis com auto-
+progressão / camada
+social fraca
+Alpha
+Progression
+4,9 (2 mil,
+EUA)
+4 4 4 4 2 4,2 Sugestão de carga e
+reps por série,
+periodização /
+recursos fortes só
+no Premium
+Liftoff 4,8 (69 mil) 3 2,5 4 3 5 3,8 Ranks, streaks,
+quests, comunidade
+/ exige rede para
+finalizar, crashes, UI
+que muda toda hora,
+foto obrigatória,
+paywall caro
+Fitbod 4,8 (268 mil) 4 3,5 4,5 4 2 3,8 Treino gerado por IA,
+UX limpa / US$
+15,99/mês, ~15%
+reclamam de
+cobrança e
+cancelamento
+JEFIT 4,8 (46 mil) 3 3 2,5 2,5 2,5 3,2 Biblioteca e
+analytics profundos
+/ anúncios, curva de
+aprendizado,
+updates que
+quebram fluxos, logs
+apagados
+Smart Fit
+App (BR)
+— 3 2 3 2,5 1,5 2,8 Treino do professor
+no app / crasha 3 a 4
+vezes por treino,
+feed de outros
+alunos esconde o
+treino, depende de
+internet
+App de Treino — Pesquisa de Mercado e Levantamento de Requisitos
+Page 2 of 18Notas de loja via Marlvel (iOS, maio de 2026), exceto Alpha Progression (Boostcamp).
+Liftoff aparece com 4,83 e 94,8 mil avaliações no Bitrise.
+Leitura por critério
+Praticidade: é o critério que mais decide quem fica. O elogio padrão a Hevy e Strong é
+abrir, registrar a série e fechar; JEFIT e Liftoff perdem por excesso de telas e etapas
+obrigatórias.
+Performance: o ponto mais fraco do mercado. Crashes ao adicionar série ou finalizar
+treino (Liftoff, Smart Fit) e falhas de sync com Apple Watch (Hevy, JEFIT) aparecem
+em todos os agregadores.
+Design: polariza. Strong é elogiado pela limpeza e criticado por parecer datado; Fitbod
+e Hevy são vistos como os mais polidos.
+UX: usuários punem mudanças frequentes de interface e fluxos quebrados por update
+(Liftoff, JEFIT, Smart Fit) mais do que a falta de recursos.
+Gamificação: motiva, mas só quando não atrapalha. Liftoff é o caso de sucesso (ranks
+Wood a Olympian), e também o exemplo do excesso: foto obrigatória para finalizar e
+recursos atrás de paywall. Streaks rígidos tendem a gerar abandono após a primeira
+quebra (WikiFit).
+Overall: satisfação alta onde o registro é rápido e confiável; satisfação cai onde há
+cobrança confusa, anúncios ou perda de dados.
+Principais dores e oportunidades
+A dor número um é confiabilidade: treino que não salva sem rede ou some depois do sync.
+Ela vira o diferencial central do produto; as demais viram requisitos e regras de negócio.
+# Dor Evidência Resposta no produto
+1 Treino não salva ou não
+finaliza sem internet
+Liftoff: erro de rede impede
+finalizar; usuário daria 5/5 se
+funcionasse offline
+(reviews); pedido de modo
+offline no roadmap da
+Motra; falta de modo offline
+no Smart Fit (estudo
+ESDI/UERJ)
+Offline-first (RNF-01, RN-
+01)
+App de Treino — Pesquisa de Mercado e Levantamento de Requisitos
+Page 3 of 18# Dor Evidência Resposta no produto
+2 Dados perdidos Relatos de treinos perdidos
+no Strong (Garage Gym
+Reviews); JEFIT apagou logs
+(justuseapp); sync com
+iCloud como principal
+reclamação de apps de log
+(Marlvel)
+Gravação por série,
+tombstones, backup e
+export (RNF-02, RN-20)
+3 Crashes no meio do
+treino
+Liftoff: tela branca ao
+adicionar série
+(justuseapp); Smart Fit
+crasha 3 a 4 vezes por treino
+(mwm)
+Meta de sessões sem crash
+e retomada de treino ativo
+(RNF-03, RF-34)
+4 Paywall e cobrança Fitbod: ~15% citam
+cobrança e cancelamento
+(Clarity); Liftoff: recursos
+atrás de paywall a preço
+considerado absurdo
+Núcleo grátis para sempre
+(RN-22)
+5 Anúncios Principal queixa do JEFIT
+grátis (Garage Gym
+Reviews)
+Zero anúncios na tela de
+treino (RN-23)
+6 Interface instável e
+inchada
+Liftoff: UI muda quase
+diariamente (App Store);
+JEFIT: update quebrou
+fluxos; Smart Fit: feed de
+outros alunos esconde o
+treino
+Navegação estável, feature
+flags, social opcional (RNF-
+08)
+7 Fricção obrigatória Liftoff exige foto para
+encerrar o treino
+(justuseapp)
+Nenhuma etapa obrigatória
+além de concluir (RN-17)
+8 Sync com relógio Falhas recorrentes no Hevy
+(help center) e JEFIT
+Fora do MVP; mesmo
+motor de sync quando
+entrar
+9 Falta de orientação de
+carga
+Strong não orienta; Alpha
+Progression é elogiado pela
+sugestão por série
+Sugestão de progressão
+dupla (RN-12)
+10 Prisão de dados Strong e Hevy exportam
+CSV; Lyfta importa de vários
+apps (Lyfta)
+Importar Strong/Hevy e
+exportar CSV/JSON (RF-
+50, RF-51)
+App de Treino — Pesquisa de Mercado e Levantamento de Requisitos
+Page 4 of 18Visão do produto, escopo e personas
+Um registrador de treino de academia que nunca perde uma série: rápido como o Strong,
+motivador como o Liftoff e funcional mesmo no subsolo da academia sem sinal.
+Nome provisório: a definir. Plataformas: iOS e Android (React Native). Idiomas: pt-BR e
+en.
+Personas
+Escopo
+Dentro do MVP: conta e onboarding, catálogo de exercícios, rotinas, execução de treino
+offline, timer de descanso, histórico, PRs, gráficos básicos, streak semanal, XP,
+sincronização, importação e exportação.
+Fora do MVP: apps de relógio, feed social, IA geradora de treino, módulo de personal
+trainer, nutrição, integração Apple Health / Health Connect (entra na fase 3).
+Requisitos funcionais
+49 requisitos em 8 módulos; prioridade MoSCoW (M = Must, S = Should, C = Could). Todo
+requisito marcado com (off) precisa funcionar 100% sem rede.
+Persona Perfil O que precisa
+Intermediário
+multimodalidade
+Treina musculação 4 a
+5x/semana e mistura boxe,
+corrida ou basquete
+Rotinas próprias, registro
+rápido, histórico confiável,
+registrar outras atividades
+Iniciante Menos de 6 meses de
+academia, não sabe montar
+treino
+Programas prontos,
+demonstração de exercício,
+sugestão de carga, motivação
+Avançado / powerlifter Segue programa nomeado
+(5/3/1, GZCLP), olha RPE e 1RM
+RPE/RIR, aquecimento,
+calculadora de anilhas, export
+dos dados
+Personal trainer (pós-
+MVP)
+Acompanha alunos Atribuir rotinas e ver aderência;
+fica fora do MVP
+App de Treino — Pesquisa de Mercado e Levantamento de Requisitos
+Page 5 of 18Conta e onboarding
+Catálogo de exercícios
+ID Requisito Prior.
+RF-01 Cadastro e login por e-mail/senha, Google e Apple M
+RF-02 Usar o app sem conta (modo local) e vincular
+depois sem perder dados (off)
+S
+RF-03 Onboarding curto: objetivo, dias por semana,
+unidade (kg/lb), nível
+M
+RF-04 Perfil com peso corporal, altura e data de
+nascimento opcionais
+M
+RF-05 Sessão permanece válida offline; renovação de
+token quando houver rede (off)
+M
+RF-06 Excluir conta e todos os dados pelo próprio app M
+ID Requisito Prior.
+RF-10 Catálogo pré-carregado no app com nome, grupo
+muscular primário/secundário e equipamento (off)
+M
+RF-11 Busca e filtros por nome, músculo e equipamento
+(off)
+M
+RF-12 Criar, editar e arquivar exercício personalizado
+(off)
+M
+RF-13 Tipo de registro por exercício: carga+reps, só reps,
+tempo, distância+tempo, carga+tempo
+M
+RF-14 Demonstração em imagem/GIF com cache local
+após primeiro download
+S
+RF-15 Histórico e recordes do exercício a partir da tela do
+exercício (off)
+M
+App de Treino — Pesquisa de Mercado e Levantamento de Requisitos
+Page 6 of 18Rotinas e programas
+Execução do treino
+ID Requisito Prior.
+RF-20 Criar, editar, duplicar, reordenar e arquivar rotinas
+(off)
+M
+RF-21 Definir por exercício: séries, faixa de reps, carga
+alvo, descanso, notas
+M
+RF-22 Superséries e circuitos M
+RF-23 Tipos de série: aquecimento, normal, drop set, até a
+falha
+M
+RF-24 Pastas para organizar rotinas (ex.: ABC, PPL) S
+RF-25 Programas prontos (biblioteca) com progressão
+semanal
+C
+ID Requisito Prior.
+RF-30 Iniciar treino a partir de rotina ou vazio (off) M
+RF-31 Valores da sessão anterior exibidos e pré-
+preenchidos em cada série (off)
+M
+RF-32 Concluir série com um toque; editar carga/reps
+inline (off)
+M
+RF-33 Adicionar, remover, trocar e reordenar exercícios
+durante o treino (off)
+M
+RF-34 Retomar treino ativo após fechar o app, crash ou
+reinício do aparelho (off)
+M
+RF-35 Timer de descanso automático com notificação
+local e vibração (off)
+M
+RF-36 Registrar RPE/RIR por série S
+RF-37 Calculadora de anilhas e de aquecimento S
+RF-38 Notas por exercício e por treino (off) M
+RF-39 Widget/Live Activity com timer e próxima série C
+App de Treino — Pesquisa de Mercado e Levantamento de Requisitos
+Page 7 of 18Finalização, histórico e progresso
+Dados e sincronização
+ID Requisito Prior.
+RF-40 Finalizar treino sem rede, com resumo: duração,
+volume, séries, PRs (off)
+M
+RF-41 Histórico em lista e calendário; editar ou excluir
+treino passado (off)
+M
+RF-42 Registrar treino retroativo (data/hora passada)
+(off)
+M
+RF-43 Detecção de recordes pessoais (PR) com destaque
+no momento da série (off)
+M
+RF-44 Gráficos por exercício: 1RM estimado, melhor série,
+volume (off)
+M
+RF-45 Volume semanal por grupo muscular (off) S
+RF-46 Registro de peso corporal e medidas (off) S
+RF-47 Registrar atividades não-musculação (corrida, luta,
+esporte) com duração
+S
+ID Requisito Prior.
+RF-50 Importar histórico de Strong e Hevy via CSV S
+RF-51 Exportar todos os dados em CSV e JSON, grátis M
+RF-52 Indicador discreto de estado de sync (sincronizado
+/ pendente / erro)
+M
+RF-53 Sync automático em segundo plano e manual
+(puxar para atualizar)
+M
+RF-54 Uso em múltiplos dispositivos com a mesma conta S
+App de Treino — Pesquisa de Mercado e Levantamento de Requisitos
+Page 8 of 18Gamificação
+Notificações e configurações
+Requisitos não funcionais
+O critério de aceite mais importante do produto é não depender de rede em nenhum fluxo
+de treino; as metas abaixo são sugestões iniciais para calibrar com o time.
+ID Requisito Prior.
+RF-60 Streak semanal baseado em meta de dias por
+semana (off)
+M
+RF-61 XP e níveis por treino concluído e PRs (off) S
+RF-62 Conquistas (marcos de treinos, volume, PRs) (off) S
+RF-63 Ranks de força por exercício (opcional, privado por
+padrão)
+C
+RF-64 Desligar toda a gamificação nas configurações M
+ID Requisito Prior.
+RF-70 Lembrete de treino nos dias planejados
+(notificação local)
+S
+RF-71 Unidades kg/lb, incremento mínimo e anilhas
+disponíveis
+M
+RF-72 Tema claro/escuro e tela sempre ligada durante o
+treino
+M
+ID Categoria Requisito Meta / critério de aceite
+RNF-
+01
+Disponibilidade
+offline
+Todos os fluxos de criar
+rotina, treinar, finalizar e
+consultar histórico
+funcionam em modo avião
+100% dos casos de teste E2E
+rodando em modo avião
+App de Treino — Pesquisa de Mercado e Levantamento de Requisitos
+Page 9 of 18ID Categoria Requisito Meta / critério de aceite
+RNF-
+02
+Durabilidade Cada série concluída é
+persistida em SQLite em
+transação antes de a UI
+confirmar
+Zero perda após kill do
+processo, crash ou bateria
+acabando (teste de kill a
+cada passo)
+RNF-
+03
+Estabilidade Sessões sem crash ≥ 99,8% (Sentry/Crashlytics)
+RNF-
+04
+Desempenho Concluir série e atualizar
+tela
+< 100 ms no p95 em Android
+intermediário
+RNF-
+05
+Desempenho Cold start até a tela inicial < 2 s no p95
+RNF-
+06
+Sincronização Dados pendentes sobem
+automaticamente ao
+recuperar rede
+< 60 s após reconexão com
+app em primeiro plano;
+idempotente (reenvio não
+duplica)
+RNF-
+07
+Escalabilidade Histórico grande sem
+degradar
+Listas e gráficos fluidos com
+5 anos de treinos (~1.000
+treinos, ~100 mil séries)
+RNF-
+08
+Estabilidade de UX Navegação principal não
+muda entre versões sem
+aviso
+Mudanças grandes atrás de
+feature flag e testadas com
+grupo beta
+RNF-
+09
+Usabilidade Treinar com uma mão, alvos
+de toque grandes
+Alvos ≥ 48 dp; série
+concluída em ≤ 2 toques
+RNF-
+10
+Acessibilidade Leitor de tela, fonte
+dinâmica, contraste
+WCAG 2.1 AA nas telas de
+treino
+RNF-
+11
+Segurança Comunicação e
+armazenamento seguros
+TLS 1.2+; tokens no
+Keychain/Keystore; senhas
+com BCrypt/Argon2 no
+backend
+RNF-
+12
+Privacidade / LGPD Peso, medidas e dados de
+treino tratados como
+potencialmente sensíveis
+(saúde)
+Consentimento explícito,
+finalidade declarada,
+exportação e exclusão pelo
+app, política de retenção
+RNF-
+13
+Bateria Timer de descanso e treino
+ativo sem drenar bateria
+Sem polling de rede durante
+treino; timers por notificação
+agendada
+App de Treino — Pesquisa de Mercado e Levantamento de Requisitos
+Page 10 of 18Regras de negócio
+25 regras sugeridas; a RN-01 é inegociável e as demais são ponto de partida para
+discussão com o time.
+Treino
+ID Categoria Requisito Meta / critério de aceite
+RNF-
+14
+Compatibilidade Versões mínimas
+suportadas
+Sugestão: iOS 15+ e Android 8
+(API 26)+
+RNF-
+15
+Internacionalização Textos, datas e números
+localizados
+pt-BR e en no lançamento;
+carga sempre armazenada
+em kg
+RNF-
+16
+Observabilidade Logs, métricas e rastreio no
+backend
+Spring Boot Actuator +
+Micrometer; métricas de
+push/pull, conflitos e erros
+de sync
+RNF-
+17
+Qualidade Testes automatizados Unitários nas regras de
+negócio (cálculos, sync, PR);
+E2E (Maestro/Detox) do
+fluxo offline; Testcontainers
+com PostgreSQL no backend
+RNF-
+18
+Manutenibilidade API versionada e migrações /api/v1 ; Flyway no
+PostgreSQL; migrações do
+SQLite versionadas no app
+ID Regra
+RN-01 Finalizar um treino grava tudo localmente e conclui
+na hora; o envio ao servidor entra na fila de sync.
+Nenhuma ação de treino espera resposta de rede.
+RN-02 Só existe um treino ativo por dispositivo. Se o sync
+revelar treino ativo em outro dispositivo, o app
+avisa e oferece finalizar ou descartar aquele.
+RN-03 Duração = do início até a última série concluída
+(não até o toque em Finalizar); o usuário pode
+editar.
+App de Treino — Pesquisa de Mercado e Levantamento de Requisitos
+Page 11 of 18Cálculos e progressão
+ID Regra
+RN-04 Treino ativo sem nova série há mais de 4 h é tratado
+como esquecido: ao abrir o app, sugerir finalizar
+com o horário da última série.
+RN-05 Treino sem nenhuma série concluída não é salvo; o
+usuário só pode descartá-lo.
+RN-06 Ao finalizar com séries não concluídas, perguntar:
+descartar essas séries ou marcá-las como
+concluídas com os valores preenchidos.
+RN-07 Treino retroativo não pode ter data futura;
+sobreposição de horário com outro treino gera
+aviso, não bloqueio.
+ID Regra
+RN-08 Série válida = concluída e de tipo diferente de
+aquecimento. Só séries válidas contam para
+volume, PR, XP e gráficos.
+RN-09 Volume de um treino = soma de carga × reps das
+séries válidas. Exercícios de peso corporal usam
+peso corporal mais recente + carga adicional, se o
+usuário habilitar.
+RN-10 1RM estimado pela fórmula de Epley (abaixo),
+calculado só para séries de 1 a 12 reps; acima disso
+o valor não é exibido.
+RN-11 Tipos de PR por exercício: maior carga, maior 1RM
+estimado, maior volume numa série, mais reps
+numa mesma carga. Editar ou excluir treino
+recalcula os PRs afetados.
+RN-12 Sugestão de carga por progressão dupla: se todas
+as séries válidas atingiram o topo da faixa de reps,
+sugerir carga + incremento mínimo configurado; se
+ficou abaixo do mínimo da faixa em 2 sessões
+seguidas, sugerir manter ou reduzir 10%. Sempre
+sugestão, nunca preenchimento forçado.
+App de Treino — Pesquisa de Mercado e Levantamento de Requisitos
+Page 12 of 18\text{1RM}_{\text{estimado}} = w \times \left(1 + \frac{r}{30}\right), \quad 
+1 \le r \le 12
+Onde w é a carga da série e r o número de repetições.
+Gamificação
+ID Regra
+RN-13 Carga é armazenada sempre em kg com 2 casas
+decimais; a exibição converte para lb e arredonda
+ao incremento configurado (ex.: 1,25 kg ou 2,5 lb).
+ID Regra
+RN-14 Streak é semanal: a semana conta quando o
+usuário atinge sua meta de dias de treino (definida
+no onboarding, 1 a 7). Faltar num dia específico
+nunca zera o streak.
+RN-15 A cada 4 semanas cumpridas o usuário ganha 1
+congelamento (máximo 2 acumulados), aplicado
+automaticamente numa semana não cumprida.
+RN-16 XP é derivado dos dados (recalculável), não
+acumulado em eventos: 10 XP por treino finalizado,
+1 XP por série válida, 25 XP por PR, teto de 150 XP
+por dia. Treinos retroativos com mais de 7 dias não
+geram XP; editar treino não duplica XP.
+RN-17 Gamificação nunca bloqueia funcionalidade nem
+exige ação extra (foto, compartilhamento, assistir
+anúncio) para concluir ou salvar um treino.
+RN-18 Ranks de força só existem para exercícios com
+tabela de referência, usam 1RM estimado relativo
+ao peso corporal e são privados por padrão. Sem
+peso corporal informado, o rank não é calculado.
+App de Treino — Pesquisa de Mercado e Levantamento de Requisitos
+Page 13 of 18Dados, conta e monetização
+ID Regra
+RN-19 Exercício do catálogo não pode ser editado nem
+excluído, só ocultado. Exercício personalizado com
+histórico só pode ser arquivado; sem histórico,
+pode ser excluído.
+RN-20 Toda exclusão é lógica (tombstone sincronizado) e
+o expurgo físico ocorre após 30 dias. Exclusão de
+conta oferece exportação antes e apaga os dados
+do servidor em até 30 dias.
+RN-21 Conflitos de sync: rotinas, exercícios e perfil
+seguem last-write-wins por registro, usando a
+versão do servidor; séries de treino são unidas por
+ID; exclusão vence edição concorrente.
+RN-22 Plano gratuito para sempre: registro, rotinas,
+histórico completo, PRs, gráficos básicos, streak e
+exportação ilimitados. Premium (sugestão):
+progressão automática, analytics avançados,
+programas prontos, temas.
+RN-23 Nenhum anúncio na tela de treino; recomendação
+de produto é não ter anúncios em lugar nenhum.
+RN-24 Datas gravadas em UTC com o fuso do dispositivo;
+o dia do treino é a data local de início. A semana
+começa na segunda-feira (configurável).
+RN-25 Dados de peso, medidas e saúde só são coletados
+após consentimento específico e podem ser
+apagados individualmente.
+App de Treino — Pesquisa de Mercado e Levantamento de Requisitos
+Page 14 of 18Arquitetura offline-first e sincronização
+A tela nunca fala com a API: ela lê e grava no SQLite, e o motor de sync replica em segundo
+plano. Salvar e finalizar um treino custa o mesmo com ou sem sinal.
+Banco local: SQLite via WatermelonDB ou op-sqlite/expo-sqlite; o protocolo pull/push
+do WatermelonDB encaixa direto em um controller Spring Boot.
+IDs no cliente: UUID v7 gerado no app, então nenhuma gravação depende de o servidor
+devolver um ID.
+Push: o app envia lotes de criados, alterados e excluídos por tabela com um
+client_op_id ; o servidor aplica em uma transação, registra o op id para ignorar
+reenvios e devolve a nova server_version .
+Pull: o app pede tudo com server_version  maior que a última recebida; o servidor
+responde por tabela, incluindo tombstones.
+Quando sincroniza: ao abrir o app, ao finalizar treino, ao reconectar e em background
+(WorkManager no Android, BGTaskScheduler no iOS); nunca bloqueando uma série.
+Conflitos: regras da RN-21, resolvidas no servidor; o app aplica o resultado no próximo
+pull.
+Auth offline: access token curto + refresh token no Keychain/Keystore; token expirado
+só pausa o sync, nunca o uso do app (RF-05).
+Backend: Spring Boot com Spring Web, Spring Security (JWT), Spring Data JPA, Flyway
+e Actuator sobre PostgreSQL.
+arquitetura proposta · 5 componentes, 1 ligação de rede
+App de Treino — Pesquisa de Mercado e Levantamento de Requisitos
+Page 15 of 18Modelo de dados inicial
+O mesmo modelo existe no SQLite do app e no PostgreSQL, com colunas de controle de
+sync em todas as tabelas sincronizáveis.
+Colunas comuns a toda tabela sincronizável: id  (UUID v7 gerado no cliente), user_id ,
+created_at , updated_at  (relógio do cliente), server_version  (bigint atribuído pelo
+servidor, sequência global), deleted_at  (tombstone).
+Entidade Campos principais Observações
+app_user email, nome, unidade,
+meta_dias_semana, fuso,
+consentimentos
+Só no servidor + cache local do
+perfil
+exercise nome, tipo_registro,
+musculo_primario,
+musculos_secundarios,
+equipamento, is_custom,
+archived_at
+Catálogo com user_id  nulo,
+versionado à parte (RN-19)
+routine_folder nome, ordem
+routine folder_id, nome, notas, ordem,
+archived_at
+routine_exercise routine_id, exercise_id, ordem,
+superset_group, descanso_seg,
+notas
+routine_set routine_exercise_id, ordem, tipo,
+reps_min, reps_max, carga_alvo_kg
+Template de série
+workout routine_id, nome, started_at,
+ended_at, fuso, status
+(ativo/finalizado), notas
+status  ativo nunca é enviado
+como finalizado sem ação do
+usuário
+workout_exercise workout_id, exercise_id, ordem,
+superset_group, notas
+workout_set workout_exercise_id, ordem, tipo,
+carga_kg, reps, duracao_seg,
+distancia_m, rpe, completed_at
+Gravada a cada toque (RNF-
+02)
+body_measurement tipo (peso, cintura…), valor,
+medido_em
+Sensível: exige consentimento
+(RN-25)
+App de Treino — Pesquisa de Mercado e Levantamento de Requisitos
+Page 16 of 18Derivados, não sincronizados: PRs, XP, nível, streak e volume semanal são calculados
+localmente a partir das séries (RN-16) e também no servidor para ranking, se ranks
+públicos forem ativados. Isso elimina conflitos de contadores.
+No PostgreSQL: índice (user_id, server_version)  em cada tabela para o pull;
+constraint de unicidade em id ; tabela sync_push_log(client_op_id, user_id,
+processed_at)  para idempotência do push; migrações com Flyway.
+Roadmap sugerido e perguntas em aberto
+O motor de sync vem antes de qualquer tela bonita: é a fundação do diferencial e o item
+mais caro de refazer depois.
+1. Fase 0 — Fundação: schema SQLite + Flyway no PostgreSQL, autenticação (RF-01, RF-
+05), endpoints /sync/pull  e /sync/push , catálogo de exercícios embarcado, testes
+de kill e modo avião no CI.
+2. Fase 1 — MVP de registro: rotinas, execução e finalização offline, timer de descanso,
+histórico, PRs, gráficos básicos, exportação. Critério de saída: um mês de uso real sem
+nenhum treino perdido.
+3. Fase 2 — Retenção: streak semanal, XP, conquistas, sugestão de progressão,
+importação Strong/Hevy, lembretes, volume por músculo.
+4. Fase 3 — Expansão: Apple Health / Health Connect, app de relógio, ranks e social
+opcional, Premium, módulo de personal trainer.
+Perguntas em aberto
+Entidade Campos principais Observações
+user_settings incremento_kg, anilhas, tema,
+gamificacao_ativa, inicio_semana
+Um registro por usuário
+Expo (managed + dev client) ou React Native CLI puro?
+Biblioteca local: WatermelonDB (protocolo de sync pronto) ou expo-sqlite/op-sqlite +
+Drizzle com sync próprio?
+Catálogo de exercícios: base própria ou licenciada (imagens/GIFs têm custo e
+direitos)?
+Modelo de receita: Premium por assinatura, vitalício, ou ambos (Hevy e Strong
+oferecem vitalício)?
+Ranks públicos e social entram em algum momento, ou o produto fica 100% pessoal?
+App de Treino — Pesquisa de Mercado e Levantamento de Requisitos
+Page 17 of 18Fontes
+Hevy vs Strong vs Fitbod vs Jefit (SensAI, 2026)
+Hevy vs Strong vs Fitbod: preços 2026 (SensAI)
+Liftoff vs Lyfta vs Hevy (SensAI, out. 2026)
+Workout apps reviews from Reddit (GummySearch)
+r/Hevy (GummySearch)
+Hevy vs rivais (Marlvel)
+Apps de gym log (Marlvel)
+Hevy vs Strong (Lyfta)
+Hevy: sync com Apple Watch (Help Center)
+Strong (Garage Gym Reviews)
+Liftoff (App Store)
+Liftoff reviews (Grand Screen)
+Liftoff reviews (justuseapp)
+Liftoff benchmark (Bitrise)
+Fitbod insights (Clarity)
+JEFIT reviews (justuseapp)
+JEFIT (Garage Gym Reviews)
+Boostcamp: alternativas ao Hevy
+Boostcamp: apps para natural bodybuilding
+Alpha Progression: apps de progressão (não independente)
+Smart Fit App (mwm.ai)
+Estudo de apps de treino e sono (ESDI/UERJ)
+Pedido de modo offline (roadmap Motra)
+Gamification in Fitness-Apps (WikiFit)
+App de Treino — Pesquisa de Mercado e Levantamento de Requisitos
+Page 18 of 18
