@@ -1,0 +1,753 @@
+DESIGN SYSTEM · V1 · 14 OUT 2026
+1More
+Design System — direção Garagem 69. Tokens, tipografia, iconografia e 31
+componentes para o app de treino offline-first.
+CONTEÚDO
+1. Brand book: princípios, voz, cor, tipo, forma, movimento
+2. Tokens de cor (claro e escuro) e contraste
+3. Tipografia
+4. Espaço, raio, bordas, tamanhos e sombras
+5. Iconografia
+6. Componentes (props, regras e preview)
+7. Telas de referência
+Fonte da verdade: tokens.json  e components/  do artifact Design System 1More. Implementação mobile: ver o PDF “Guia
+React Native”.
+1More · Design System v1 1/35
+1 · BRAND BOOK
+1More é um caderno de treino com graxa de garagem. A estrutura é o caderninho de capa dura dos bodybuilders
+antigos — data no canto, exercício em letra de forma, carga × reps na linha pautada, "PR!" rabiscado na margem.
+A pintura é Garagem 69: muscle car de fim de semana, pôster de rock colado na parede da oficina — laranja
+Hugger, azul Grabber, faixa amarela de corrida, preto de pneu sobre papel creme de manual. É referência, não
+fantasia: nada de textura de papel amassado, cromado brilhando, chama pintada ou neon.
+PRINCÍPIOS
+1. O treino está a 2 toques. Abrir o app →  "Começar" na rotina →  primeira série. Concluir uma série é 1 toque
+no SetCheck ; corrigir é 1 toque no número.
+2. Lápis e caneta. O que o app sugere (sessão anterior, carga pré-preenchida) aparece a lápis — ink-muted . O
+que o usuário confirma vira tinta — ink . Essa diferença é a principal informação visual da tela de treino.
+3. Papel, não vidro. Superfícies chapadas, bordas de traço, quinas de 2px. Nenhum degradê de cor, nenhuma
+sombra difusa, nenhum brilho, nenhum neon.
+4. Navegação que não muda. Quatro abas fixas — Treinar, Histórico, Progresso, Perfil. Funcionalidade nova
+entra dentro delas, nunca reorganiza a casa (RNF-08).
+5. Offline é normal. Nada na interface espera a rede. Sem rede, o SyncStatus  diz "Offline · salvo no aparelho"
+em lápis — nunca em hugger , nunca em modal.
+VOZ E TEXTO
+Português do Brasil, direto, de academia. Frases curtas. Você, nunca "o usuário".
+Botões são verbos: "Começar", "Finalizar", "Pular", "Retomar". Nunca "Clique aqui", nunca "OK" quando dá para
+dizer o que acontece.
+Títulos, rótulos de coluna e botões em CAIXA ALTA condensada (estilos title-lg , title-md , label ). Texto
+corrido em caixa normal.
+Números sempre no formato pt-BR: 82,5 kg , 12.340 kg , 1:45 . Multiplicação com "×", não "x": 80 × 10 .
+Sem emoji, sem exclamação em excesso, sem "Parabéns!!!". Um recorde é um carimbo PR , não um confete.
+Exemplos reais: "Treino salvo no aparelho." · "3 séries não concluídas" · "Esqueceu de finalizar?" · "Bora,
+próxima série" · "Caderno novo".
+COR
+Os tokens têm dois temas: Papel (claro, padrão) e Noite (escuro). Toda tela suporta os dois (RF-72).
+Fundo de tela: paper . Folhas sobre a página (bloco de exercício, card de rotina, timer, tab bar, sheet):
+paper-raised . Campo em foco/pressionado: paper-sunk .
+Texto: ink  (tinta) para o que importa, ink-muted  (lápis) para sugestão, metadado e rótulo. ink-faint  só
+em desabilitado.
+Ação primária: fundo ink  com texto on-ink  — tinta cheia. Uma por tela.
+grabber  (azul Grabber): série concluída, links ( link ) e anel de foco ( focus ).
+hugger  (laranja Hugger): recorde pessoal, ação destrutiva, timer estourado. Nunca para "offline" ou aviso
+comum. É a cor de identidade — guarde-a para os momentos que valem.
+1More · Design System v1 2/35
+stripe  (faixa amarela de corrida): treino em andamento ( ResumeBar ), dia de hoje. A série ativa usa stripe-
+wash  — no tema Noite ele é um amarelo apagado para manter ink  e ink-muted  legíveis.
+Decorativos, sem significado: rule  (pauta), margin-line  (linha de margem rosada), line  (borda de card).
+Contraste: cada token de texto lista no usage  os fundos em que passa 4.5:1 nos dois temas; line-strong  e
+focus  passam 3:1. Estados nunca são só cor: concluída tem check, PR tem a palavra "PR", tipo de série tem
+letra (A/D/F), sync tem palavra.
+TIPOGRAFIA
+Quatro famílias, todas com arquivos em fonts/  (OFL):
+Racing Sans One ( --font-headline , 400) — itálico pesado de decalque de muscle car e capa de LP. Títulos
+de tela, nome de exercício e de rotina, letra da divisão (A/B/C), botões e o logotipo. Sempre em caixa alta,
+nunca abaixo de 18px, nunca em parágrafo.
+Barlow Condensed ( --font-display , 700/800) — a letra de forma das etiquetas: cabeçalho de coluna,
+rótulo de seção, tabs, segmentados. Caixa alta, espaçada.
+Barlow ( --font-sans , 400–700) — texto corrido, listas, descrições.
+IBM Plex Mono ( --font-mono , 500/600) — todo número: carga, reps, tempo, datas, estatísticas. Dígitos
+tabulares, para as colunas alinharem como numa planilha datilografada.
+Escala: display-xl  48 · title-lg  32 · title-md  22 · button  18 (Racing Sans One) · label  13 · body-lg  18 ·
+body  16 · body-strong  16 · caption  13 · num-xl  56 · num-lg  28 · num-md  20 · num-sm  14. Respeite a fonte
+dinâmica do sistema (RNF-10): a escala é o ponto de partida, não um teto.
+ESPAÇO, TAMANHO E FORMA
+Grade de 4px: space-1  4 →  space-8  64. Gutter lateral das telas: space-4 . Entre blocos de exercício:
+space-5 .
+Alvo de toque mínimo size-touch  (48px), sem exceção na tela de treino (RNF-09). Linha de série e item de
+lista: size-row  (56px = duas pautas de size-rule ).
+Coluna de margem: size-margin  (44px) com margin-line  à direita, carregando número da série, data do
+histórico ou letra da rotina (A/B/C). É a assinatura visual do sistema — use-a nesses três lugares e só neles.
+Raio: radius-1  (2px) é o padrão; radius-2  (4px) é o máximo e só no topo de sheets; inputs e linhas usam
+radius-0 . Nunca pílula, nunca 12px+.
+Bordas são traços: border-hair  (1px) para pauta e cards, border-pen  (2px) para controles e réguas,
+border-double  (4px, estilo double ) sob títulos — o sublinhado duplo de livro-caixa.
+Sombra: só shadow-sheet  (borda de folha empilhada, sem desfoque) em cards de rotina, semana e
+estatística. Todo o resto shadow-none .
+MOVIMENTO
+Rápido e mecânico, como virar uma página: 120–160ms, ease-out , só opacidade e translação. Check da série:
+o quadrado preenche em 80ms. Carimbo de PR: escala 1.15 →  1 em 120ms. Sheet: sobe 200ms. Nada pulsa, nada
+brilha, nada fica em loop. Com "reduzir movimento" ativo, tudo vira corte seco.
+1More · Design System v1 3/35
+ICONOGRAFIA
+Conjunto próprio em assets/Icons/  e no componente Icon : traço de 2px, pontas retas, cantos vivos, grade
+de 24px. Ícone sempre acompanha texto, exceto em IconButton  (que exige label ). A sequência semanal usa
+tally  (risquinhos de contagem), não chama nem troféu. Proibido: emoji, ícones preenchidos, ícones de outra
+biblioteca misturados.
+MARCA
+Ainda não há logotipo: escreva 1More em Racing Sans One, caixa normal, cor ink . O "1" é a série extra — não o
+substitua por ícone.
+LAYOUT DAS TELAS
+Treinar (início): ResumeBar  se houver treino ativo →  TopBar  com SyncStatus  →  WeekTally  →  rotinas
+( RoutineCard , a sugerida do dia primeiro) →  "Treino livre" →  TabBar .
+Treino ativo: TopBar compact  (minimizar · cronômetro · Finalizar) →  ExerciseBlock s em paper-raised
+sobre paper  →  "+ Exercício" →  RestTimer  fixo acima da TabBar . A série ativa é a única com marca-texto.
+Tela sempre ligada.
+Finalizar: um toque. Se houver séries não concluídas, Sheet  com as opções da RN-06. Resumo com
+StatGrid  e carimbos. Nenhuma etapa obrigatória.
+Histórico: SegmentedControl  Lista/Calendário →  HistoryRow  ou CalendarMonth .
+Progresso: ProgressChart  por exercício, SegmentedControl  1RM/Melhor/Volume.
+Perfil: ListRow  com unidades, anilhas, gamificação ( Switch ), exportar dados, conta.
+Referências compostas: cartões "Tela: Início", "Tela: Treino ativo" e "Tela: Treino finalizado".
+USANDO NO CÓDIGO
+Web/preview: tokens.css  + components/bundle.css  + React 18 + components/bundle.js  →
+window.OneMore . Tipos em components/index.d.ts .
+React Native (o app): a seção "React Native" deste sistema traz o theme.ts  gerado destes tokens, as fontes
+e a tradução de cada padrão (pauta, margem, sombra de folha, foco) para StyleSheet . Os componentes
+web são a especificação visual e de comportamento; reimplemente-os em RN com os mesmos nomes e
+props.
+1More · Design System v1 4/35
+2 · COR
+Dois temas: Papel (claro) (padrão) e Noite (escuro). Valores {grabber}  são aliases. Nunca use cor como único
+sinal: concluída tem check, PR tem a palavra, tipo de série tem letra, sync tem palavra.
+TOKEN CLARO ESCURO USO
+paper  #f1e8d6  #17161a Fundo de todas as telas: a folha do
+caderno, creme de manual de oficina.
+paper-raised  #faf5ea  #211f24 Folhas soltas por cima da página:
+cards de rotina, bloco de exercício,
+timer, tab bar, sheets.
+paper-sunk  #e5dac3  #2b2830 Campo em foco, botão desabilitado,
+linha pressionada.
+rule  #c9c2b0  #34313a Pauta do caderno: linhas horizontais
+entre séries e linhas do papel.
+Decorativo, nunca carrega significado.
+margin-line  #e0844f  #7a3a1c Linha de margem vertical do caderno
+(coluna do número da série), em
+laranja desbotado. Decorativo.
+line  #d9cdb4  #37333c Bordas finas de cards e divisores
+entre blocos. Decorativo.
+line-strong  #7d7462  #8c8478 Bordas de controles (checkbox,
+inputs, chips) e sublinhado dos
+campos. ≥ 3:1 em paper, paper-raised
+e paper-sunk nos dois temas.
+ink  #1a1917  #f1e8d6 Tinta: preto de pneu. Texto principal,
+valores confirmados, títulos. Sobre
+paper, paper-raised, paper-sunk,
+done-wash e stripe-wash.
+ink-muted  #5c5549  #b5ab98 Lápis: valores da sessão anterior,
+placeholder pré-preenchido,
+metadados, rótulos de coluna. Sobre
+paper, paper-raised, paper-sunk,
+done-wash e stripe-wash.
+ink-faint  #a89f8d  #5d5864 Somente texto desabilitado (isento de
+contraste). Nunca para informação.
+on-ink  #faf5ea  #17161a Texto e ícones sobre fundo ink (botão
+primário, segmento selecionado, chip
+selecionado).
+hugger  #a33b10  #ff8c4a Laranja Hugger (cor de muscle car 69):
+recorde pessoal (PR), ação destrutiva,
+timer estourado. Como texto sobre
+paper, paper-raised, paper-sunk e
+done-wash.
+1More · Design System v1 5/35
+TOKEN CLARO ESCURO USO
+on-hugger  #faf5ea  #17161a Texto sobre fundo hugger (raro:
+confirmação destrutiva preenchida).
+grabber  #1d5a85  #7cc0f0 Azul Grabber: série concluída
+(checkbox marcado), links, anel de
+foco. Como texto sobre paper, paper-
+raised, paper-sunk, done-wash e
+stripe-wash.
+on-grabber  #faf5ea  #17161a Check sobre o checkbox marcado
+(fundo grabber).
+done-wash  #dfe6ea  #1d2730 Fundo da linha de série concluída (azul
+Grabber bem lavado).
+stripe  #f2bb3d  #f2bb3d Amarelo de faixa de corrida: barra
+"treino em andamento", dia de hoje no
+calendário. Texto sobre ele sempre
+on-stripe.
+on-stripe  #1a1917  #17161a Texto e ícones sobre stripe.
+stripe-wash  #f6d27f  #3d3218 Fundo da série ativa (a próxima a
+fazer). No escuro é um amarelo
+apagado para manter ink e ink-muted
+legíveis.
+focus  {grabber}  {grabber} Anel de foco: 2px sólido, offset 2px.
+Alias de grabber.
+link  {grabber}  {grabber} Links e ações de texto. Alias de
+grabber.
+scrim  rgba(28, 33, 48, 0.48)  rgba(0, 0, 0, 0.64) Véu atrás de sheets e diálogos.
+CONTRASTE VERIFICADO (WCAG 2.1)
+PAR CLARO ESCURO MÍNIMO
+ink / paper 14.43:1 14.80:1 4,5:1 (texto)
+ink / paper-raised 16.16:1 13.42:1 4,5:1 (texto)
+ink / stripe-wash 12.08:1 10.34:1 4,5:1 (texto)
+ink-muted / paper 6.05:1 7.93:1 4,5:1 (texto)
+ink-muted / paper-sunk 5.31:1 6.38:1 4,5:1 (texto)
+ink-muted / stripe-wash 5.07:1 5.54:1 4,5:1 (texto)
+hugger / paper 5.41:1 7.81:1 4,5:1 (texto)
+hugger / paper-sunk 4.75:1 6.28:1 4,5:1 (texto)
+grabber / paper 6.05:1 9.14:1 4,5:1 (texto)
+grabber / done-wash 5.83:1 7.69:1 4,5:1 (texto)
+1More · Design System v1 6/35
+PAR CLARO ESCURO MÍNIMO
+on-ink / ink 16.16:1 14.80:1 4,5:1 (texto)
+on-grabber / grabber 6.77:1 9.14:1 4,5:1 (texto)
+on-stripe / stripe 10.00:1 10.25:1 4,5:1 (texto)
+line-strong / paper-sunk 3.33:1 3.92:1 3:1 (borda/foco)
+focus / paper-sunk 5.31:1 7.35:1 3:1 (borda/foco)
+1More · Design System v1 7/35
+3 · TIPOGRAFIA
+FAMÍLIA (TOKEN) STACK CSS
+--font-headline "Racing Sans One", "Arial Black", sans-serif
+--font-display "Barlow Condensed", "Arial Narrow", sans-serif
+--font-sans Barlow, "Helvetica Neue", Arial, sans-serif
+--font-mono "IBM Plex Mono", ui-monospace, Menlo, monospace
+display-xl
+headline · 48px/50px ·
+400 · ls 0.01em
+Título do resumo de treino.
+Caixa alta, Racing Sans One.
+TREINO A FEITO
+title-lg
+headline · 32px/34px ·
+400 · ls 0.02em
+Título de tela (TopBar). Caixa
+alta.
+TREINAR
+title-md
+headline · 22px/26px ·
+400 · ls 0.03em
+Nome do exercício, nome e letra
+da rotina, título de sheet. Caixa
+alta.
+SUPINO RETO COM BARRA
+button
+headline · 18px/20px ·
+400 · ls 0.04em
+Rótulo de Button. Caixa alta.
+COMEÇAR
+label
+display · 13px/16px ·
+700 · ls 0.08em
+Cabeçalho de coluna, rótulo de
+seção, tab, segmentado,
+estatística. Barlow Condensed
+700, caixa alta. Nunca Racing
+Sans One em tamanho pequeno.
+SÉRIE ANTERIOR KG REPS
+body-lg
+sans · 18px/26px · 500
+Texto de destaque em estados
+vazios e sheets.
+Treino salvo no aparelho. Sobe para a nuvem quando houver
+rede.
+body
+sans · 16px/24px · 400
+Texto corrido, descrições,
+notas.
+Peito · Tríceps · 6 exercícios
+1More · Design System v1 8/35
+body-strong
+sans · 16px/24px · 600
+Título de linha em listas
+(histórico, configurações).
+Treino A — Peito e Tríceps
+caption
+sans · 13px/18px · 500
+Status de sync, dicas sob
+campos, legendas.
+Sincronizado
+num-xl
+mono · 56px/56px · 600 ·
+ls -0.02em
+Contagem do timer de
+descanso.
+1:45
+num-lg
+mono · 28px/32px · 600
+Valores de estatística no resumo
+e no Stepper.
+102,5
+num-md
+mono · 20px/24px · 600
+Carga e reps dentro da linha de
+série.
+80 × 10
+num-sm
+mono · 14px/20px · 500
+Valores da sessão anterior,
+datas, durações, índice da série.
+14 OUT · 58 min
+ARQUIVOS DE FONTE (OFL)
+FAMÍLIA PESO ARQUIVO
+Barlow 400 fonts/Barlow-400.woff2
+Barlow 500 fonts/Barlow-500.woff2
+Barlow 600 fonts/Barlow-600.woff2
+Barlow 700 fonts/Barlow-700.woff2
+Barlow Condensed 700 fonts/BarlowCondensed-700.woff2
+Barlow Condensed 800 fonts/BarlowCondensed-800.woff2
+IBM Plex Mono 500 fonts/IBMPlexMono-500.woff2
+IBM Plex Mono 600 fonts/IBMPlexMono-600.woff2
+Racing Sans One 400 fonts/RacingSansOne-400.woff2
+1More · Design System v1 9/35
+4 · ESPAÇO E FORMA
+ESPAÇAMENTO (GRADE DE 4PX)
+TOKEN VALOR USO
+space-1 4px Respiro entre ícone e texto em selos pequenos.
+space-2 8px Gap entre colunas da linha de série; entre ícone e rótulo de botão.
+space-3 12px Padding interno de células de estatística e chips.
+space-4 16px Gutter lateral das telas; padding de cards.
+space-5 24px Padding horizontal de botões; espaço entre blocos de exercício.
+space-6 32px Espaço entre seções de uma tela.
+space-7 48px Respiro de estados vazios e topo de telas.
+space-8 64px Respiro máximo (rodapé acima da tab bar).
+RAIO
+TOKEN VALOR USO
+radius-0 0px Inputs (só sublinhado), linhas de série, tab bar, timer.
+radius-1 2px Padrão: botões, cards, chips, checkbox, sheets. Quina de papel cortado.
+radius-2 4px Máximo permitido. Só topo de sheets.
+BORDAS
+TOKEN VALOR USO
+border-
+hair
+1px Pauta, divisores, borda de card.
+border-pen 2px Traço de caneta: bordas de botão e controle, linha de margem,
+sublinhado de input, régua sob cabeçalho de tabela.
+border-
+double
+4px Sublinhado duplo de contabilidade sob títulos de tela (border-style
+double).
+TAMANHOS
+TOKEN VALOR USO
+size-touch 48px Alvo mínimo de toque (RNF-09). Todo botão, checkbox e ícone
+clicável.
+size-row 56px Altura da linha de série e de itens de lista: duas pautas.
+1More · Design System v1 10/35
+TOKEN VALOR USO
+size-rule 28px Passo da pauta do caderno (NotebookPage, TextField multilinha).
+size-margin 44px Largura da coluna de margem (número da série, data, letra da rotina).
+size-tabbar 64px Altura da tab bar (sem safe area).
+size-icon 24px Ícone padrão.
+size-icon-
+sm
+18px Ícone dentro de botões compactos e status.
+SOMBRAS
+TOKEN VALOR USO
+shadow-
+sheet
+claro: 0 1px 0 #d9cdb4, 0 3px 0
+-1px #e5dac3 | escuro: 0 1px 0
+#37333c, 0 3px 0 -1px #2b2830
+Borda de folha empilhada sob cards
+de rotina e estatística. Sem desfoque
+— nunca sombra difusa.
+shadow-
+none
+none Padrão de todo o resto.
+1More · Design System v1 11/35
+5 · ICONOGRAFIA
+Traço de caneta: grade de 24px, linha de 2px, pontas retas ( square ), cantos vivos ( miter ), sem preenchimento.
+Os arquivos vêm com tinta #1c2130  ( ink  do tema claro): no app, troque stroke  pela cor do tema ( ink  ou
+ink-muted ) — com react-native-svg-transformer , configure replaceAttrValues: {"#1c2130": "
+{props.color}"} .
+Os mesmos traços estão em window.OneMore.ICON_PATHS  / componente Icon .
+check plus minus close chevron-
+right
+chevron-left chevron-down timer
+play pause skip more swap note notebook calendar
+chart user sliders sync offline alert trash drag
+search filter tally plate dumbbell flag download arrow-up
+Componente: <Icon name="check" size={24} /> . SVGs em assets/Icons/ ; paths em ICON_PATHS .
+1More · Design System v1 12/35
+6 · COMPONENTES
+Namespace web window.OneMore  (React 18, components/bundle.js  + bundle.css ). No app React Native,
+reimplemente com os mesmos nomes e props. Previews no tema claro.
+FUNDAMENTOS
+ICON
+Ícones de traço do 1More: linha de 2px, pontas retas (square) e cantos vivos (miter), grade de 24px — como um
+traço de caneta, nunca preenchidos, nunca emoji.
+O consumidor fornece: name  (um dos nomes em Icon.names ), opcional size  (24 padrão, 18 em botões
+compactos), title  quando o ícone está sozinho e carrega significado.
+Cor sempre herdada ( currentColor ): use ink  em ações, ink-muted  em metadados.
+Ícone decorativo ao lado de texto: sem title  (fica aria-hidden ).
+tally  (risquinhos de contagem) representa a sequência semanal. Não use chamas, troféus ou estrelas.
+Os mesmos traços estão como SVG em assets/Icons/  para o app React Native ( react-native-svg ).
+PROPS
+export interface IconProps { name: IconName; size?: number; strokeWidth?: number; title?: string; 
+className?: string }
+PREVIEW
+NOTEBOOKPAGE
+Fundo de página com pauta ( rule  a cada size-rule ) e, opcionalmente, a linha de margem ( margin-line  em
+size-margin ).
+O consumidor fornece: children , ruled  (padrão true), margin .
+1More · Design System v1 13/35
+Use pauta só em superfícies de leitura vazias (estado vazio, notas, onboarding). Telas densas (treino ativo)
+ficam em paper  liso — as linhas de série já são a pauta.
+A pauta é desenhada com linhas de corte seco (CSS repeating-linear-gradient  com paradas duras ou
+View s de 1px no RN) — nunca transição de cor.
+PROPS
+export interface NotebookPageProps { ruled?: boolean; margin?: boolean; children?: React.ReactNode; 
+className?: string }
+PREVIEW
+AÇÕES
+BUTTON
+Botão de texto em caixa alta na Racing Sans One (itálico de decalque de muscle car), borda de caneta de 2px e
+quina de 2px. primary  (tinta cheia) é a ação principal da tela — no máximo um por tela.
+O consumidor fornece: children  (verbo no infinitivo ou imperativo curto: "Começar", "Finalizar", "Pular"),
+variant  ( primary  | secondary  | ghost  | danger ), size  ( md  48px | lg  56px), block  para largura total,
+icon / iconRight  opcionais e onClick .
+primary : Começar treino, Finalizar, Salvar. secondary : ações de apoio (−15/+15 no timer, Cancelar). ghost :
+ações terciárias dentro de listas. danger : Descartar treino, Excluir — sempre com confirmação.
+Altura mínima 48px ( size-touch ); o alvo nunca diminui.
+Nada de ícone sozinho aqui — use IconButton.
+Não: gradiente, sombra, pílula arredondada, emoji no rótulo.
+PROPS
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  /** primary = tinta cheia, uma por tela. */
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  /** md = 48px, lg = 56px. */
+  size?: 'md' | 'lg';
+  block?: boolean;
+  icon?: IconName;
+  iconRight?: IconName;
+}
+1More · Design System v1 14/35
+PREVIEW
+ICONBUTTON
+Ação só com ícone, em área de toque de 48×48px. Usado para "mais opções", fechar sheet, voltar e trocar
+exercício.
+O consumidor fornece: icon , label  (obrigatório — vira aria-label  e tooltip), variant  ( ghost  padrão |
+outline ), onClick .
+Use outline  quando o botão fica isolado numa área vazia (Stepper); ghost  dentro de cabeçalhos e linhas.
+Nunca reduza abaixo de 48px, mesmo que o ícone seja 18px.
+PROPS
+export interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> { icon: 
+IconName; label: string; variant?: 'ghost' | 'outline'; size?: number }
+PREVIEW
+REGISTRO DE TREINO
+SETCHECK
+O checkbox que conclui uma série: o toque mais importante do app. Quadrado de 32px numa área de 48px;
+marcado vira azul Grabber ( grabber ) com o check em on-grabber .
+O consumidor fornece: checked , onChange(checked) , label  ("Concluir série 2").
+Um toque conclui a série usando os valores pré-preenchidos (RF-32). Grave no SQLite antes de trocar o
+estado visual (RNF-02).
+1More · Design System v1 15/35
+Dispare o RestTimer e uma vibração curta ao marcar.
+Desmarcar é permitido e não pede confirmação.
+PROPS
+export interface SetCheckProps { checked: boolean; onChange?: (checked: boolean) => void; label?: 
+string; disabled?: boolean }
+PREVIEW
+NUMBERFIELD
+Campo numérico escrito "na linha": sem caixa, só o sublinhado de 2px, dígitos em IBM Plex Mono tabulares. O
+valor da sessão anterior aparece em lápis ( ink-muted ) como placeholder; o que o usuário confirma fica em
+tinta ( ink ).
+O consumidor fornece: value , onChange(string) , placeholder  (valor anterior), label  ou ariaLabel , unit
+opcional, size  ( md  dentro da SetRow | lg  em formulários), decimal={false}  para reps.
+Ao focar, seleciona tudo — digitar substitui o número sem apagar.
+Aceite vírgula e ponto; armazene sempre em kg com 2 casas (RN-13) e exiba no incremento configurado.
+Teclado: decimal-pad  para carga, number-pad  para reps.
+PROPS
+export interface NumberFieldProps {
+  value?: string | number; onChange?: (value: string) => void; placeholder?: string;
+  label?: string; hideLabel?: boolean; ariaLabel?: string; unit?: string;
+  size?: 'md' | 'lg'; decimal?: boolean; disabled?: boolean; className?: string;
+}
+PREVIEW
+1More · Design System v1 16/35
+SETMARKER
+O que vai na margem da linha de série: o número (1, 2, 3…) ou a letra do tipo — A aquecimento, D drop set, F até a
+falha (RF-23).
+O consumidor fornece: index , type  ( normal  | warmup  | drop  | failure ).
+Toque na margem abre a escolha do tipo (Sheet). Aquecimento não conta para volume, PR nem XP (RN-08).
+O tipo é dito por letra e cor — nunca só cor.
+PROPS
+export interface SetMarkerProps { index?: number; type?: SetType }
+PREVIEW
+SETTABLEHEADER
+Cabeçalho das colunas da tabela de séries — SÉRIE · ANTERIOR · KG · REPS · ✓  — com a régua de caneta
+embaixo, como no caderno.
+O consumidor fornece: unit  ( kg  | lb ). Já vem incluído no ExerciseBlock; use solto só fora dele.
+PROPS
+export interface SetTableHeaderProps { unit?: Unit }
+PREVIEW
+SETROW
+Uma linha do caderno = uma série. Margem com o número, valor anterior a lápis, carga e reps na linha, checkbox
+à direita. Altura 56px (duas pautas).
+O consumidor fornece: index , type , previous  ( {weight, reps}  ou texto), weight , reps , unit , done ,
+active , pr , onToggle , onWeightChange , onRepsChange .
+Estados: - pendente: papel, valores anteriores como placeholder a lápis. - ativa ( active ): a próxima série a
+fazer, com a faixa amarela ( stripe-wash ). Só uma por vez. - concluída ( done ): fundo done-wash , valores em
+tinta, checkbox azul Grabber. - PR ( pr ): carimbo laranja sobre a coluna "anterior" no momento da conclusão.
+Regras: - Concluir = 1 toque no checkbox; corrigir = 1 toque no número + digitar (RNF-09: ≤ 2 toques). - Deslizar
+para a esquerda remove a série (com desfazer), nunca um ícone de lixeira por linha. - Sem rede, nada muda: a
+linha confirma após gravar no SQLite (RNF-04: < 100 ms).
+1More · Design System v1 17/35
+PROPS
+export interface SetRowProps {
+  index: number; type?: SetType; unit?: Unit;
+  /** Valores da última sessão (lápis). */
+  previous?: { weight: number; reps: number } | string;
+  weight?: string | number; reps?: string | number;
+  done?: boolean; active?: boolean; pr?: boolean;
+  onToggle?: (done: boolean) => void;
+  onWeightChange?: (value: string) => void;
+  onRepsChange?: (value: string) => void;
+  className?: string;
+}
+PREVIEW
+EXERCISEBLOCK
+Um exercício dentro do treino ativo: número na margem, nome em caixa alta, meta (músculo · descanso), nota
+opcional, tabela de séries e "+ Adicionar série".
+O consumidor fornece: number , name , meta , note , unit , children  (SetRow), onAddSet , onMore  (abre
+Sheet com trocar, reordenar, superset, remover — RF-33).
+Blocos empilhados com space-5  entre eles, sem cards aninhados.
+Superset (RF-22): dois blocos seguidos com o mesmo número + letra na margem ("3a", "3b").
+Toque no nome abre o histórico do exercício (RF-15).
+1More · Design System v1 18/35
+PROPS
+export interface ExerciseBlockProps {
+  number?: number | string; name: string; meta?: string; note?: string; unit?: Unit;
+  children?: React.ReactNode; onAddSet?: (() => void) | null; onMore?: () => void; className?: string;
+}
+PREVIEW
+RESTTIMER
+Timer de descanso fixado acima da tab bar durante o treino. Começa sozinho ao concluir uma série (RF-35), com
+a duração do exercício.
+O consumidor fornece: remaining  e total  (segundos), onAdjust(±15) , onSkip , next  ("Supino · 80 kg × 9").
+A contagem é por timestamp de término + notificação local agendada, não por intervalo (RNF-13): sobrevive
+a app em segundo plano.
+Ao zerar: vibração, rótulo e números em hugger , botão vira "Ok". Nada pisca.
+A régua de progresso enche em tinta; marcas a cada 10%.
+PROPS
+export interface RestTimerProps { remaining?: number; total?: number; next?: React.ReactNode; 
+onAdjust?: (deltaSeconds: number) => void; onSkip?: () => void; className?: string }
+1More · Design System v1 19/35
+PREVIEW
+RESUMEBAR
+Faixa amarela de corrida ( stripe ) no topo da Home (e das outras abas) quando existe um treino ativo —
+inclusive depois de crash ou reinício (RF-34). Um toque volta ao treino.
+O consumidor fornece: title , elapsed  ("32 min"), onResume .
+Se o treino está parado há mais de 4 h (RN-04), troque o texto por "Esqueceu de finalizar?" e ofereça Finalizar
+com o horário da última série.
+PROPS
+export interface ResumeBarProps { title: string; elapsed?: string; onResume?: () => void }
+PREVIEW
+1More · Design System v1 20/35
+FORMULÁRIOS
+TEXTFIELD
+Campo de texto sublinhado. Com multiline , vira um trecho de folha pautada (linhas a cada size-rule ) — para
+notas de exercício e de treino (RF-38).
+O consumidor fornece: label , value , onChange , placeholder , hint , multiline , rows .
+Rótulo em caixa alta acima, nunca só placeholder.
+Notas são opcionais e nunca bloqueiam salvar.
+PROPS
+export interface TextFieldProps { label?: string; value?: string; onChange?: (value: string) => void; 
+placeholder?: string; hint?: string; multiline?: boolean; rows?: number; type?: string; className?: 
+string }
+PREVIEW
+STEPPER
+Valor numérico ajustado por botões −/+ de 48px. Para descanso padrão, meta de dias por semana, incremento
+mínimo de carga e calculadora de anilhas.
+O consumidor fornece: label , value , onChange(number) , step , min , max , unit , format  opcional (ex.:
+segundos →  2:00 ).
+PROPS
+export interface StepperProps { label?: string; value: number; onChange?: (value: number) => void; 
+step?: number; min?: number; max?: number; unit?: string; format?: (value: number) => string }
+1More · Design System v1 21/35
+PREVIEW
+CHIP
+Filtro alternável de quina viva. Para filtros do catálogo (músculo, equipamento — RF-11) e tipo de série.
+O consumidor fornece: children , selected , onClick .
+Selecionado = tinta cheia ( ink / on-ink ). Não use cores por grupo muscular.
+Altura visual 40px; no React Native some hitSlop  de 4px para chegar a 48.
+PROPS
+export interface ChipProps extends React.ButtonHTMLAttributes<HTMLButtonElement> { selected?: boolean }
+PREVIEW
+SEGMENTEDCONTROL
+Escolha única entre 2–4 opções curtas: unidade kg/lb (RF-71), métrica do gráfico (1RM, Melhor série, Volume),
+visão lista/calendário do histórico.
+O consumidor fornece: options  ( {value, label}[] ), value , onChange , label  (acessível).
+PROPS
+export interface SegmentedControlProps<V extends string = string> { options: { value: V; label: 
+React.ReactNode }[]; value: V; onChange?: (value: V) => void; label?: string }
+PREVIEW
+SWITCH
+Liga/desliga quadrado. Para configurações binárias: gamificação (RF-64), tela sempre ligada (RF-72), lembretes.
+1More · Design System v1 22/35
+O consumidor fornece: checked , onChange , label  (acessível). Normalmente dentro de um ListRow via
+right .
+PROPS
+export interface SwitchProps { checked: boolean; onChange?: (checked: boolean) => void; label: string }
+PREVIEW
+MARCAS
+STAMP
+Carimbo de borracha: texto em mono caixa alta, borda dupla, levemente torto (−6°). É o "PR!" que o bodybuilder
+rabiscava na margem — aqui em laranja Hugger.
+O consumidor fornece: children  (curtíssimo: "PR", "2 PR", "Novo"), tone  ( hugger  padrão | grabber  | ink ),
+size  ( sm  | md ), angle  opcional.
+hugger  só para recorde pessoal (RF-43). grabber  para conquistas (RF-62). ink  para marcações neutras
+("Retroativo").
+Um carimbo por linha, no máximo. Não anime além de um "pop" de escala de 120ms ao aparecer.
+PROPS
+export interface StampProps { children: React.ReactNode; tone?: 'hugger' | 'grabber' | 'ink'; size?: 
+'sm' | 'md'; angle?: number; className?: string }
+PREVIEW
+FEEDBACK
+SYNCSTATUS
+Indicador discreto de sincronização (RF-52), no canto do TopBar. Ícone + palavra, nunca só cor.
+O consumidor fornece: state  ( synced  | pending  | offline  | error ), label  opcional.
+offline  é estado normal, não erro: o treino está salvo no aparelho. Nunca use hugger  para ele.
+Só error  (falha após várias tentativas) usa hugger ; toque leva à tela de dados.
+1More · Design System v1 23/35
+PROPS
+export interface SyncStatusProps { state?: 'synced' | 'pending' | 'offline' | 'error'; label?: string }
+PREVIEW
+SHEET
+Folha que sobe de baixo para escolhas rápidas e confirmações: opções do exercício, tipo de série, finalizar com
+séries pendentes (RN-06).
+O consumidor fornece: open , title , onClose , children  (botões block ); inline  só para documentação.
+Nunca use diálogo central; a sheet fica ao alcance do polegar.
+Máximo 4 ações. Destrutiva por último, em danger .
+PROPS
+export interface SheetProps { open?: boolean; inline?: boolean; title?: string; onClose?: () => void; 
+children?: React.ReactNode }
+PREVIEW
+1More · Design System v1 24/35
+EMPTYSTATE
+Página em branco do caderno: título grande com sublinhado duplo, uma frase direta e uma ação.
+O consumidor fornece: title , body , action  (um Button).
+Sem ilustração, sem emoji. A página vazia é o próprio desenho.
+PROPS
+export interface EmptyStateProps { title: string; body?: string; action?: React.ReactNode }
+PREVIEW
+NAVEGAÇÃO
+TOPBAR
+Cabeçalho de tela: linha de contexto em mono (data, rotina), título grande em caixa alta e o sublinhado duplo de
+livro-caixa.
+O consumidor fornece: title , kicker , compact  (título de 24px em até 2 linhas — use no treino ativo, onde o
+nome da rotina é longo), left  (ex.: IconButton voltar), right  (ex.: SyncStatus, botão Finalizar).
+Título curto: "Treinar", "Histórico", "Progresso", "Perfil" ou o nome da rotina.
+No treino ativo, right  leva o botão "Finalizar" — sempre visível, nunca escondido em menu.
+1More · Design System v1 25/35
+PROPS
+export interface TopBarProps { title: React.ReactNode; kicker?: React.ReactNode; compact?: boolean; 
+left?: React.ReactNode; right?: React.ReactNode; className?: string }
+PREVIEW
+TABBAR
+Navegação principal fixa, 4 abas e nada mais: Treinar · Histórico · Progresso · Perfil. A aba ativa ganha a barra
+de tinta no topo.
+O consumidor fornece: items  ( {id, label, icon} ), active , onChange .
+A ordem e os nomes não mudam entre versões (RNF-08).
+Durante o treino ativo a tab bar continua visível; o RestTimer fica logo acima dela.
+PROPS
+export interface TabBarProps { items: TabBarItem[]; active: string; onChange?: (id: string) => void }
+PREVIEW
+SECTIONHEADER
+Rótulo de seção em caixa alta com uma linha fina até a borda, e ação opcional em link.
+O consumidor fornece: title , action  (texto), onAction .
+1More · Design System v1 26/35
+PROPS
+export interface SectionHeaderProps { title: string; action?: string; onAction?: () => void }
+PREVIEW
+LISTROW
+Linha genérica de 56px para Perfil e Configurações: ícone, rótulo (+ descrição), valor em mono e chevron ou
+controle à direita.
+O consumidor fornece: label , description , icon , value , right  (Switch, SegmentedControl), onClick .
+PROPS
+export interface ListRowProps { label: React.ReactNode; description?: React.ReactNode; icon?: IconName; 
+value?: React.ReactNode; right?: React.ReactNode; onClick?: () => void }
+PREVIEW
+1More · Design System v1 27/35
+ROTINAS
+ROUTINECARD
+Ficha de rotina na Home: letra da divisão na margem (A/B/C), nome, exercícios, último treino e Começar — do
+app fechado ao primeiro set em 2 toques.
+O consumidor fornece: letter , name , exercises  (nomes), lastDone  ("Último: 10 out · há 4 dias"), onStart ,
+onOpen .
+A rotina sugerida do dia (a que está há mais tempo sem fazer) vem primeiro.
+Toque no nome abre a edição; "Começar" inicia direto, sem tela intermediária.
+PROPS
+export interface RoutineCardProps { letter?: string; name: string; exercises?: string[]; lastDone?: 
+string; onStart?: () => void; onOpen?: () => void }
+PREVIEW
+HISTÓRICO
+HISTORYROW
+Linha do histórico: data na margem (dia em mono + mês), nome do treino, resumo em mono e carimbo de PR
+quando houver (RF-41).
+O consumidor fornece: day , month , title , detail  ("58 min · 12.340 kg · 18 séries"), prs , onClick .
+1More · Design System v1 28/35
+PROPS
+export interface HistoryRowProps { day: string; month: string; title: string; detail?: string; prs?: 
+number; onClick?: () => void }
+PREVIEW
+CALENDARMONTH
+Mês em grade, semana começando na segunda (RN-24). Dia treinado = número circulado à caneta; hoje = faixa
+amarela de corrida ( stripe ).
+O consumidor fornece: year , month  (0–11), marked  (dias), today , onSelect(dia) .
+PROPS
+export interface CalendarMonthProps { year: number; /** 0–11 */ month: number; marked?: number[]; 
+today?: number; onSelect?: (day: number) => void }
+1More · Design System v1 29/35
+PREVIEW
+PROGRESSO
+WEEKTALLY
+A semana como página de agenda: um X de caneta em cada dia treinado, hoje com borda de tinta, contagem
+contra a meta e a sequência em semanas (RF-60, RN-14/15).
+O consumidor fornece: days  (7 booleanos, segunda primeiro — RN-24), goal , today  (0–6), streak , freezes .
+Faltar um dia nunca "quebra" nada visualmente — só a semana conta.
+Some inteiro quando a gamificação está desligada (RF-64).
+PROPS
+export interface WeekTallyProps { days: boolean[]; goal?: number; today?: number; streak?: number; 
+freezes?: number }
+1More · Design System v1 30/35
+PREVIEW
+STATGRID
+Grade 2×N de números grandes em mono com rótulo em caixa alta — o resumo de treino (RF-40): duração,
+volume, séries, PRs.
+O consumidor fornece: items  ( {label, value, unit} ).
+Números formatados em pt-BR (12.340 kg; 1:02 h). Volume só de séries válidas (RN-09).
+PROPS
+export interface StatGridProps { items: { label: string; value: React.ReactNode; unit?: string }[] }
+PREVIEW
+1More · Design System v1 31/35
+PROGRESSCHART
+Gráfico de linha em papel milimetrado: grade fina de pauta, linha de tinta com pontos quadrados, o máximo
+marcado em laranja Hugger ( hugger ) com "PR" (RF-44).
+O consumidor fornece: title , data  ( {label, value}[]  em ordem cronológica), unit .
+Uma série por gráfico. Sem área preenchida, sem gradiente, sem curva suavizada.
+No React Native, desenhe com react-native-svg  usando os mesmos tokens.
+PROPS
+export interface ProgressChartProps { title?: string; unit?: string; data: { label: string; value: 
+number }[] }
+PREVIEW
+1More · Design System v1 32/35
+7 · TELAS DE REFERÊNCIA
+INÍCIO (TREINAR)
+Composição de referência da aba Treinar — a tela que abre o app. O treino está a 2 toques: abrir o app →
+"Começar" →  primeira série.
+Ordem fixa: ResumeBar (se houver treino ativo) →  TopBar com SyncStatus →  WeekTally →  rotinas (sugerida do
+dia primeiro) →  "Treino livre" →  TabBar.
+Claro (Papel) · Escuro (Noite)
+1More · Design System v1 33/35
+TREINO ATIVO
+Composição de referência do treino em andamento — onde o usuário passa 95% do tempo. Uma mão, polegar:
+tudo que importa está na metade de baixo.
+TopBar (minimizar · cronômetro · Finalizar) →  ExerciseBlocks empilhados com a série ativa na faixa amarela →
+"+ Exercício" →  RestTimer fixo →  TabBar. Sem anúncio, sem feed, sem pop-up (RN-23).
+Claro (Papel) · Escuro (Noite)
+1More · Design System v1 34/35
+TREINO FINALIZADO
+Resumo salvo na hora, com ou sem rede (RN-01). Título grande, carimbos de recorde, números do dia e um único
+botão para fechar. Nada obrigatório: sem foto, sem compartilhar (RN-17).
+Claro (Papel) · Escuro (Noite)
+1More · Design System v1 35/35

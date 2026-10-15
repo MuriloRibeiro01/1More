@@ -1,0 +1,257 @@
+1MORE · GUIA DE IMPLEMENTAÇÃO · 14 OUT 2026
+GUIA REACT NATIVE
+Como transformar o Design System 1More (Garagem 69) em código no app React Native + Expo. O theme.ts
+abaixo é gerado de tokens.json : quando um token mudar, regenere o arquivo em vez de editar valores soltos.
+Os componentes web do design system são a especificação visual e de comportamento — reimplemente cada
+um com o mesmo nome e as mesmas props.
+FONTES
+Instale @expo-google-fonts/racing-sans-one , @expo-google-fonts/barlow , @expo-google-fonts/barlow-
+condensed  e @expo-google-fonts/ibm-plex-mono  (ou copie os .ttf  do Google Fonts para assets/fonts  no
+CLI). Carregue só os pesos usados:
+import { useFonts } from 'expo-font';
+import { RacingSansOne_400Regular } from '@expo-google-fonts/racing-sans-one';
+import { Barlow_400Regular, Barlow_500Medium, Barlow_600SemiBold, Barlow_700Bold } from '@expo-google-
+fonts/barlow';
+import { BarlowCondensed_700Bold, BarlowCondensed_800ExtraBold } from '@expo-google-fonts/barlow-
+condensed';
+import { IBMPlexMono_500Medium, IBMPlexMono_600SemiBold } from '@expo-google-fonts/ibm-plex-mono';
+export function useOneMoreFonts() {
+  return useFonts({ RacingSansOne_400Regular, Barlow_400Regular, Barlow_500Medium, Barlow_600SemiBold, 
+Barlow_700Bold,
+    BarlowCondensed_700Bold, BarlowCondensed_800ExtraBold, IBMPlexMono_500Medium, 
+IBMPlexMono_600SemiBold });
+}
+No RN, peso vem do fontFamily  (cada peso é uma família): nunca combine fontWeight  com essas fontes.
+1More · Guia React Native 1/6
+THEME.TS
+export const colors = {
+  light: {
+    paper: '#f1e8d6',
+    paperRaised: '#faf5ea',
+    paperSunk: '#e5dac3',
+    rule: '#c9c2b0',
+    marginLine: '#e0844f',
+    line: '#d9cdb4',
+    lineStrong: '#7d7462',
+    ink: '#1a1917',
+    inkMuted: '#5c5549',
+    inkFaint: '#a89f8d',
+    onInk: '#faf5ea',
+    hugger: '#a33b10',
+    onHugger: '#faf5ea',
+    grabber: '#1d5a85',
+    onGrabber: '#faf5ea',
+    doneWash: '#dfe6ea',
+    stripe: '#f2bb3d',
+    onStripe: '#1a1917',
+    stripeWash: '#f6d27f',
+    focus: '#1d5a85',
+    link: '#1d5a85',
+    scrim: 'rgba(28, 33, 48, 0.48)',
+  },
+  dark: {
+    paper: '#17161a',
+    paperRaised: '#211f24',
+    paperSunk: '#2b2830',
+    rule: '#34313a',
+    marginLine: '#7a3a1c',
+    line: '#37333c',
+    lineStrong: '#8c8478',
+    ink: '#f1e8d6',
+    inkMuted: '#b5ab98',
+    inkFaint: '#5d5864',
+    onInk: '#17161a',
+    hugger: '#ff8c4a',
+    onHugger: '#17161a',
+    grabber: '#7cc0f0',
+    onGrabber: '#17161a',
+    doneWash: '#1d2730',
+    stripe: '#f2bb3d',
+    onStripe: '#17161a',
+    stripeWash: '#3d3218',
+    focus: '#7cc0f0',
+    link: '#7cc0f0',
+    scrim: 'rgba(0, 0, 0, 0.64)',
+  },
+} as const;
+export type ThemeName = keyof typeof colors;
+export type Colors = typeof colors.light;
+export const space = {
+  s1: 4,
+  s2: 8,
+  s3: 12,
+  s4: 16,
+  s5: 24,
+  s6: 32,
+  s7: 48,
+  s8: 64,
+1More · Guia React Native 2/6
+} as const;
+export const radius = {
+  radius0: 0,
+  radius1: 2,
+  radius2: 4,
+} as const;
+export const border = {
+  borderHair: 1,
+  borderPen: 2,
+  borderDouble: 4,
+} as const;
+export const size = {
+  sizeTouch: 48,
+  sizeRow: 56,
+  sizeRule: 28,
+  sizeMargin: 44,
+  sizeTabbar: 64,
+  sizeIcon: 24,
+  sizeIconSm: 18,
+} as const;
+export const type = {
+  displayXl: { fontFamily: 'RacingSansOne_400Regular', fontSize: 48, lineHeight: 50, letterSpacing: 
+0.48, textTransform: 'uppercase' },
+  titleLg: { fontFamily: 'RacingSansOne_400Regular', fontSize: 32, lineHeight: 34, letterSpacing: 0.64, 
+textTransform: 'uppercase' },
+  titleMd: { fontFamily: 'RacingSansOne_400Regular', fontSize: 22, lineHeight: 26, letterSpacing: 0.66, 
+textTransform: 'uppercase' },
+  button: { fontFamily: 'RacingSansOne_400Regular', fontSize: 18, lineHeight: 20, letterSpacing: 0.72, 
+textTransform: 'uppercase' },
+  label: { fontFamily: 'BarlowCondensed_700Bold', fontSize: 13, lineHeight: 16, letterSpacing: 1.04, 
+textTransform: 'uppercase' },
+  bodyLg: { fontFamily: 'Barlow_500Medium', fontSize: 18, lineHeight: 26, letterSpacing: 0 },
+  body: { fontFamily: 'Barlow_400Regular', fontSize: 16, lineHeight: 24, letterSpacing: 0 },
+  bodyStrong: { fontFamily: 'Barlow_600SemiBold', fontSize: 16, lineHeight: 24, letterSpacing: 0 },
+  caption: { fontFamily: 'Barlow_500Medium', fontSize: 13, lineHeight: 18, letterSpacing: 0 },
+  numXl: { fontFamily: 'IBMPlexMono_600SemiBold', fontSize: 56, lineHeight: 56, letterSpacing: -1.12, 
+fontVariant: ['tabular-nums'] },
+  numLg: { fontFamily: 'IBMPlexMono_600SemiBold', fontSize: 28, lineHeight: 32, letterSpacing: 0, 
+fontVariant: ['tabular-nums'] },
+  numMd: { fontFamily: 'IBMPlexMono_600SemiBold', fontSize: 20, lineHeight: 24, letterSpacing: 0, 
+fontVariant: ['tabular-nums'] },
+  numSm: { fontFamily: 'IBMPlexMono_500Medium', fontSize: 14, lineHeight: 20, letterSpacing: 0, 
+fontVariant: ['tabular-nums'] },
+} as const;
+focus  e link  já saem resolvidos para o valor de grabber ; scrim  sai como rgba() .
+PADRÕES, TRADUZIDOS
+WEB REACT NATIVE
+Pauta ( NotebookPage ,
+nota multilinha)
+View s absolutas de altura border.borderHair , cor rule , a cada size.sizeRule  —
+ou um Pattern  do react-native-svg . Nunca LinearGradient .
+Linha de margem borderRightWidth: border.borderPen , borderRightColor: marginLine  na
+coluna de largura size.sizeMargin .
+shadow-sheet  (folha
+empilhada)
+Sem elevation / shadowRadius . Use borderBottomWidth: 1  em line  e um View
+de 1px a 2px abaixo em paperSunk .
+1More · Guia React Native 3/6
+WEB REACT NATIVE
+Sublinhado duplo do título Dois View s de 1px em ink  separados por 2px.
+Anel de foco borderWidth: 2 , borderColor: focus  no estado focado (teclado externo e leitor de
+tela).
+Alvo de 48px minHeight: size.sizeTouch  ou hitSlop  até 48. Vale para Chip  (40 visível +
+hitSlop  4).
+Toque Pressable  com fundo paperSunk  em pressed , sem ripple colorido
+( android_ripple={{ color: colors[theme].paperSunk }} ).
+Carimbo de PR transform: [{ rotate: '-6deg' }] , borda 2px + um View  externo com borda 1px a
+2px de distância.
+Ícones react-native-svg  com os paths de assets/Icons/  (ou ICON_PATHS  do bundle),
+strokeLinecap="square" , strokeLinejoin="miter" .
+COMPORTAMENTO OBRIGATÓRIO NA TELA DE TREINO
+Concluir série grava no SQLite em transação antes de mudar o visual (RNF-02); a UI responde em < 100 ms
+(RNF-04).
+expo-haptics  ( impactAsync(Light) ) ao concluir série; notificationAsync(Success)  ao bater PR.
+expo-keep-awake  ativo enquanto houver treino ativo (RF-72).
+Timer de descanso guarda o timestamp de término e agenda notificação local — não conta com
+setInterval  em segundo plano (RNF-13).
+Teclado: keyboardType="decimal-pad"  para carga, "number-pad"  para reps; selectTextOnFocus .
+Leitor de tela: accessibilityRole="checkbox"  + accessibilityState={{ checked }}  no SetCheck ; o
+rótulo diz a série ("Concluir série 2, 80 quilos, 9 repetições").
+1More · Guia React Native 4/6
+CHECKLIST DE COMPONENTES
+Os 31 componentes do sistema, na ordem do bundle. Props completas no PDF do Design System (seção 6) e em
+components/index.d.ts . Use a última coluna para marcar o que já foi portado.
+COMPONENTE GRUPO RESUMO FEITO
+Icon Fundamentos Ícones de traço do 1More: linha de 2px, pontas retas (square) e cantos
+vivos (miter), grade de 24px — como um traço de caneta, nunca
+preenchidos, nunca emoji.
+Button Ações Botão de texto em caixa alta na Racing Sans One (itálico de decalque de
+muscle car), borda de caneta de 2px e quina de 2px.
+IconButton Ações Ação só com ícone, em área de toque de 48×48px.
+SetCheck Registro de
+treino
+O checkbox que conclui uma série: o toque mais importante do app.
+NumberField Registro de
+treino
+Campo numérico escrito "na linha": sem caixa, só o sublinhado de 2px,
+dígitos em IBM Plex Mono tabulares.
+TextField Formulários Campo de texto sublinhado.
+Stepper Formulários Valor numérico ajustado por botões −/+ de 48px.
+Chip Formulários Filtro alternável de quina viva.
+SegmentedControl Formulários Escolha única entre 2–4 opções curtas: unidade kg/lb (RF-71), métrica do
+gráfico (1RM, Melhor série, Volume), visão lista/calendário do histórico.
+Switch Formulários Liga/desliga quadrado.
+Stamp Marcas Carimbo de borracha: texto em mono caixa alta, borda dupla, levemente
+torto (−6°).
+SetMarker Registro de
+treino
+O que vai na margem da linha de série: o número (1, 2, 3…) ou a letra do
+tipo — A aquecimento, D drop set, F até a falha (RF-23).
+SetTableHeader Registro de
+treino
+Cabeçalho das colunas da tabela de séries — SÉRIE · ANTERIOR · KG ·
+REPS · ✓  — com a régua de caneta embaixo, como no caderno.
+SetRow Registro de
+treino
+Uma linha do caderno = uma série.
+E xerciseBlock Registro de
+treino
+Um exercício dentro do treino ativo: número na margem, nome em caixa
+alta, meta (músculo · descanso), nota opcional, tabela de séries e "+
+Adicionar série".
+RestTimer Registro de
+treino
+Timer de descanso fixado acima da tab bar durante o treino.
+ResumeBar Registro de
+treino
+Faixa amarela de corrida (stripe) no topo da Home (e das outras abas)
+quando existe um treino ativo — inclusive depois de crash ou reinício (RF-
+34).
+SyncStatus Feedback Indicador discreto de sincronização (RF-52), no canto do TopBar.
+1More · Guia React Native 5/6
+COMPONENTE GRUPO RESUMO FEITO
+TopBar Navegação Cabeçalho de tela: linha de contexto em mono (data, rotina), título grande
+em caixa alta e o sublinhado duplo de livro-caixa.
+TabBar Navegação Navegação principal fixa, 4 abas e nada mais: Treinar · Histórico ·
+Progresso · Perfil.
+SectionHeader Navegação Rótulo de seção em caixa alta com uma linha fina até a borda, e ação
+opcional em link.
+RoutineCard Rotinas Ficha de rotina na Home: letra da divisão na margem (A/B/C), nome,
+exercícios, último treino e Começar — do app fechado ao primeiro set em
+2 toques.
+WeekTally Progresso A semana como página de agenda: um X de caneta em cada dia treinado,
+hoje com borda de tinta, contagem contra a meta e a sequência em
+semanas (RF-60, RN-14/15).
+StatGrid Progresso Grade 2×N de números grandes em mono com rótulo em caixa alta — o
+resumo de treino (RF-40): duração, volume, séries, PRs.
+HistoryRow Histórico Linha do histórico: data na margem (dia em mono + mês), nome do treino,
+resumo em mono e carimbo de PR quando houver (RF-41).
+CalendarMonth Histórico Mês em grade, semana começando na segunda (RN-24).
+ProgressChart Progresso Gráfico de linha em papel milimetrado: grade fina de pauta, linha de tinta
+com pontos quadrados, o máximo marcado em laranja Hugger (hugger)
+com "PR" (RF-44).
+ListRow Navegação Linha genérica de 56px para Perfil e Configurações: ícone, rótulo (+
+descrição), valor em mono e chevron ou controle à direita.
+Sheet Feedback Folha que sobe de baixo para escolhas rápidas e confirmações: opções
+do exercício, tipo de série, finalizar com séries pendentes (RN-06).
+E mptyState Feedback Página em branco do caderno: título grande com sublinhado duplo, uma
+frase direta e uma ação.
+NotebookPage Fundamentos Fundo de página com pauta (rule a cada size-rule) e, opcionalmente, a
+linha de margem (margin-line em size-margin).
+ORDEM SUGERIDA DE IMPLEMENTAÇÃO
+1. Fundação: theme.ts , fontes, Icon , Button , IconButton , TopBar , TabBar .
+2. Treino (o núcleo do MVP): SetCheck , NumberField , SetMarker , SetTableHeader , SetRow ,
+ExerciseBlock , RestTimer , Sheet , Stamp , ResumeBar .
+3. Início e rotinas: RoutineCard , WeekTally , SectionHeader , SyncStatus , Chip , TextField , Stepper .
+4. Histórico e progresso: HistoryRow , CalendarMonth , StatGrid , ProgressChart , SegmentedControl .
+5. Perfil e estados: ListRow , Switch , EmptyState , NotebookPage .
+1More · Guia React Native 6/6

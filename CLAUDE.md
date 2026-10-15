@@ -1,8 +1,24 @@
 # 1more — App de Treino offline-first
 
-Registrador de treino de academia que **nunca perde uma série**. Requisitos completos em
-`docs/App de Treino — Pesquisa de Mercado e Levantamento de Requisitos.pdf`
-(versão texto pesquisável: `docs/requisitos.txt`). IDs de requisito: RF-xx, RNF-xx, RN-xx.
+Registrador de treino de academia que **nunca perde uma série**. IDs de requisito: RF-xx, RNF-xx, RN-xx.
+
+## Documentos de referência (`docs/`) — leia o que tocar no seu escopo
+Cada PDF tem uma versão `.txt` pesquisável ao lado (use o `.txt` para ler/grep).
+| Documento | Conteúdo | Quem usa |
+|-----------|----------|----------|
+| `requisitos.txt` (PDF "App de Treino — Pesquisa…") | RF/RNF/RN, arquitetura de sync, modelo de dados, roadmap | Todos |
+| `1More-Design-System.txt` | Direção visual "Garagem 69", tokens de cor (Papel/Noite), tipografia, 31 componentes com props | Prisma, Sérgio, Dumont |
+| `1More-Guia-React-Native.txt` | `theme.ts` pronto, fontes Expo, tradução dos padrões web→RN, comportamento obrigatório da tela de treino, ordem de implementação dos componentes | Prisma, Sérgio |
+| `1More-Prototipo-MVP.txt` | 11 telas, navegação, contagem de toques, interações e requisitos por tela | Prisma, Dumont, Atlas |
+
+### Resumo do design (detalhes nos docs)
+- 4 abas fixas e nesta ordem: **Treinar · Histórico · Progresso · Perfil** (RNF-08).
+- Temas **Papel** (claro, padrão) e **Noite** (escuro). Cores só via `theme.ts`, nunca hex solto.
+- Fontes: Racing Sans One (títulos/botões, caixa alta), Barlow Condensed (rótulos), Barlow (texto), IBM Plex Mono (todo número). No RN o peso vem do `fontFamily`, nunca `fontWeight`.
+- Sem gradiente, sem sombra difusa, sem pílula, sem emoji; raio máx. 4px; alvo de toque ≥ 48dp.
+- Escolhas/confirmações em `Sheet` (de baixo), nunca diálogo central. Offline é estado normal, nunca erro.
+- Componentes RN com os **mesmos nomes e props** do Design System.
+- Texto pt-BR direto ("você"), botões são verbos, números em formato pt-BR (`82,5 kg`, `80 × 10`).
 
 ## Stack
 | Camada   | Tecnologia                                                                  | Pasta      |

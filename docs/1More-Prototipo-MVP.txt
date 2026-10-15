@@ -1,0 +1,280 @@
+PROTÓTIPO NAVEGÁVEL · MVP · 14 OUT 2026
+1More
+Protótipo do MVP — 11 telas, navegação e regras de interação, para guiar o
+desenvolvimento.
+Fonte: canvas “1More — Protótipo MVP” (artifact Design). Componentes e tokens: PDF “1More — Design System”. Implementação:
+PDF “Guia React Native”. Requisitos (RF/RNF/RN): documento de pesquisa e requisitos.
+1More · Protótipo MVP 1/19
+NAVEGAÇÃO
+Quatro abas fixas, que não mudam entre versões (RNF-08). O treino é o centro: a aba Treinar abre direto na
+rotina do dia, e o treino ativo continua acessível de qualquer aba pela faixa “Retomar”.
+ABA TELA FUNÇÃO
+Treinar Início Começar treino, rotinas, semana
+Histórico Lista / mês Treinos passados, retroativo
+Progresso Gráficos Evolução, recordes, corpo
+Perfil Ajustes Conta, unidades, dados
+FLUXO PRINCIPAL
+Boas-vindas →  Onboarding (4 passos) →  Treinar →  Treino ativo ⇄  Adicionar exercício →
+Treino finalizado →  Treinar
+Histórico →  Treino passado →  (Repetir) →  Treino ativo
+Progresso →  Exercício
+Treinar →  Editar rotina ⇄  Adicionar exercício
+CONTAGEM DE TOQUES
+AÇÃO TOQUES CAMINHO
+Abrir o app e registrar a 1ª série 2 Treinar →  Começar →  quadrado da série
+Concluir uma série 1 Quadrado da série
+Corrigir carga ou reps 1 + digitar Toque no número
+Finalizar treino 1 (+1 se houver pendentes) Finalizar →  (sheet)
+Voltar a um treino minimizado 1 Faixa “Retomar”
+Repetir um treino antigo 3 Histórico →  treino →  Repetir
+Ver recordes de um exercício 2 Progresso →  recorde
+REGRAS GERAIS DE INTERAÇÃO
+Alvo mínimo de toque 48 dp; tudo da tela de treino alcançável com uma mão (RNF-09).
+Nenhuma ação espera a rede: salvar, finalizar e consultar histórico funcionam em modo avião (RNF-01, RN-
+01).
+Escolhas e confirmações usam a folha que sobe de baixo, nunca diálogo central.
+Destrutivo sempre pede confirmação e é lógico (tombstone) por 30 dias (RN-20).
+Temas Papel (claro) e Noite (escuro) em todas as telas (RF-72).
+1More · Protótipo MVP 2/19
+ONBOARDING.DC.HTML
+0 · BOAS-VINDAS E ONBOARDING
+Primeira abertura do app. Entrar é opcional: “Começar sem conta” cria o modo local (RF-02). Quatro passos
+curtos coletam o mínimo (RF-03) e o último já oferece três jeitos de começar a treinar.
+Boas-vindas
+ Passo 1 · objetivo
+ Passo 2 · dias por semana
+Passo 3 · unidade e nível
+ Passo 4 · como começar
+1More · Protótipo MVP 3/19
+INTERAÇÕES E NAVEGAÇÃO
+ELEMENTO / AÇÃO RESULTADO
+Começar sem conta / Google / Apple / e-mail Avança para o passo 1 (no app: login real ou modo local)
+Voltar (seta) Passo anterior
+Barra de progresso 1–4 Mostra o passo; não é clicável
+Objetivo Escolha única (rádio): Ganhar massa, Força, Condicionamento, Saúde
+Stepper dias/semana 1 a 7; define a meta da sequência semanal (RN-14)
+Unidade kg/lb · Nível SegmentedControl; nível só ajusta sugestões de carga
+Usar divisão ABC pronta →  Treinar (início)
+Montar minha rotina →  Editar rotina
+Treino livre agora →  Treino ativo
+REQUISITOS ATENDIDOS
+RF-01, RF-02, RF-03, RF-71 · RN-14
+NOTAS DE IMPLEMENTAÇÃO
+Sem conta, tudo fica no SQLite; vincular depois não perde dados.
+Tela não pede peso, altura nem nascimento: isso fica opcional no Perfil (RF-04, RN-25).
+1More · Protótipo MVP 4/19
+MAIN.DC.HTML
+1 · TREINAR (INÍCIO)
+Tela que abre o app. A rotina sugerida do dia (a que está há mais tempo sem fazer) vem em destaque com
+“Começar treino”. Do app fechado à primeira série: 2 toques.
+Topo: semana + rotina do dia
+ Rolado: outras rotinas e treino livre
+INTERAÇÕES E NAVEGAÇÃO
+ELEMENTO / AÇÃO RESULTADO
+Começar treino (rotina do dia) →  Treino ativo
+Começar (cada rotina) →  Treino ativo daquela rotina
+Nome da rotina →  Editar rotina
+Nova →  Editar rotina (vazia)
+Treino livre (sem rotina) →  Treino ativo sem exercícios
+Faixa “Treino em andamento · Retomar” Aparece se existir treino ativo (inclusive após crash) →  Treino ativo
+Abas Treinar · Histórico · Progresso · Perfil
+REQUISITOS ATENDIDOS
+RF-30, RF-34, RF-52, RF-60 · RN-02, RN-04, RN-14, RN-15
+NOTAS DE IMPLEMENTAÇÃO
+Se o treino ativo estiver parado há mais de 4 h, a faixa vira “Esqueceu de finalizar?” e oferece finalizar com o
+horário da última série (RN-04).
+1More · Protótipo MVP 5/19
+WeekTally some quando a gamificação está desligada (RF-64).
+SyncStatus “Offline” é estado normal, nunca erro.
+1More · Protótipo MVP 6/19
+TREINO.DC.HTML
+2 · TREINO ATIVO
+O coração do app. Cada exercício é um bloco do caderno; cada série, uma linha. Valores da sessão anterior
+aparecem a lápis e são usados se o usuário só tocar no quadrado. A série ativa fica na faixa amarela.
+Início: aquecimento ativo
+ 2 séries + timer
+ Carga acima do recorde →  PR
+ Finalizar com pendentes
+INTERAÇÕES E NAVEGAÇÃO
+ELEMENTO / AÇÃO RESULTADO
+Quadrado da série (1 toque) Conclui com os valores pré-preenchidos, grava no SQLite, inicia o descanso do exercício
+Toque no número (carga/reps) Edita inline; teclado decimal (carga) ou numérico (reps)
+Margem da série Tipo: número, A (aquecimento), D (drop), F (falha) — abre seletor no app
+Adicionar série Nova linha copiando a última
+… do exercício Sheet: Trocar exercício ( →  Adicionar exercício), Ver histórico ( →  Exercício), Remover
+Timer −15 / +15 / Pular Ajusta ou encerra o descanso; ao zerar fica laranja e vibra
++ Exercício →  Adicionar exercício
+Finalizar (tudo feito) →  Treino finalizado
+Finalizar (pendentes) Sheet RN-06: marcar como concluídas, descartar pendentes ou voltar
+Finalizar (nenhuma série) Sheet RN-05: descartar treino
+Seta para baixo Minimiza o treino →  Treinar (faixa Retomar aparece)
+REQUISITOS ATENDIDOS
+RF-30 a RF-38, RF-40, RF-43, RF-72 · RN-01, RN-03, RN-05, RN-06, RN-08, RN-11, RN-23 · RNF-
+02, RNF-04, RNF-09, RNF-13
+1More · Protótipo MVP 7/19
+NOTAS DE IMPLEMENTAÇÃO
+Gravar a série no SQLite em transação ANTES de mudar o visual (RNF-02); resposta < 100 ms.
+Timer guarda o timestamp de término e agenda notificação local; não depende de setInterval em segundo
+plano.
+PR só para séries válidas (não aquecimento); carimbo aparece no momento da conclusão.
+Tela sempre ligada enquanto houver treino ativo; zero anúncios.
+1More · Protótipo MVP 8/19
+CATALOGO.DC.HTML
+2A · ADICIONAR EXERCÍCIO
+Catálogo embarcado, funciona offline. Busca ignora acentos; filtros por grupo muscular; seleção múltipla para
+adicionar vários de uma vez.
+Lista com filtro “Todos”
+ Busca “sup”
+INTERAÇÕES E NAVEGAÇÃO
+ELEMENTO / AÇÃO RESULTADO
+Campo de busca Filtra por nome, ignorando acentos
+Chips de músculo Filtro de escolha única
+Linha do exercício Marca/desmarca (seleção múltipla)
+Adicionar N exercícios →  Treino ativo com os exercícios no fim
+Criar exercício próprio Formulário de exercício personalizado (RF-12)
+Seta voltar →  Treino ativo sem mudanças
+REQUISITOS ATENDIDOS
+RF-10, RF-11, RF-12, RF-13, RF-33
+NOTAS DE IMPLEMENTAÇÃO
+Mesma tela serve para Editar rotina (o destino do botão muda).
+Exercício do catálogo nunca é editado, só ocultado (RN-19).
+1More · Protótipo MVP 9/19
+RESUMO.DC.HTML
+3 · TREINO FINALIZADO
+Resumo salvo na hora, com ou sem rede. Nada obrigatório: sem foto, sem compartilhar. Um botão para fechar.
+Resumo e recordes
+ Semana e nota opcional
+INTERAÇÕES E NAVEGAÇÃO
+ELEMENTO / AÇÃO RESULTADO
+Fechar →  Treinar (início)
+Nota do treino Opcional; salva com o treino
+REQUISITOS ATENDIDOS
+RF-38, RF-40, RF-43, RF-60, RF-61 · RN-01, RN-09, RN-16, RN-17
+NOTAS DE IMPLEMENTAÇÃO
+Duração = início até a última série concluída (RN-03).
+XP derivado dos dados, com teto diário (RN-16); some se a gamificação estiver desligada.
+Sync entra na fila; o status mostra “Offline · salvo no aparelho” quando não há rede.
+1More · Protótipo MVP 10/19
+HISTORICO.DC.HTML
+HISTÓRICO
+Aba 2. Lista agrupada por semana (com a contagem contra a meta) ou mês em calendário, dias treinados
+circulados.
+Lista por semana
+ Mês · toque no dia
+INTERAÇÕES E NAVEGAÇÃO
+ELEMENTO / AÇÃO RESULTADO
+Lista / Mês Alterna a visualização
+Linha de treino →  Treino passado
+Dia no calendário Mostra o treino do dia abaixo; toque →  Treino passado
+Registrar treino passado Treino retroativo (data/hora passadas)
+REQUISITOS ATENDIDOS
+RF-41, RF-42, RF-47 · RN-07, RN-24
+NOTAS DE IMPLEMENTAÇÃO
+Atividades não-musculação (corrida, luta) aparecem na mesma lista.
+Semana começa na segunda (configurável).
+1More · Protótipo MVP 11/19
+TREINODETALHE.DC.HTML
+HISTÓRICO · TREINO PASSADO
+Treino concluído em modo leitura, com atalho para repeti-lo.
+Resumo + exercícios
+ Rolado: ações
+INTERAÇÕES E NAVEGAÇÃO
+ELEMENTO / AÇÃO RESULTADO
+Editar / Pronto Libera os números para correção; PRs e volume recalculam (RN-11)
+Repetir este treino →  Treino ativo com os mesmos exercícios
+Excluir treino Sheet de confirmação →  Histórico (exclusão lógica, 30 dias)
+Seta voltar →  Histórico
+REQUISITOS ATENDIDOS
+RF-41, RF-43 · RN-11, RN-16, RN-20
+NOTAS DE IMPLEMENTAÇÃO
+Editar treino não duplica XP (RN-16).
+1More · Protótipo MVP 12/19
+PROGRESSO.DC.HTML
+PROGRESSO
+Aba 3. Gráfico por exercício em papel milimetrado, séries por músculo na semana, recordes recentes e peso
+corporal.
+Gráfico + volume por músculo
+ Recordes e corpo
+INTERAÇÕES E NAVEGAÇÃO
+ELEMENTO / AÇÃO RESULTADO
+Chips de exercício Troca o exercício do gráfico
+1RM / Melhor / Volume Troca a métrica
+Ver histórico completo →  Exercício
+Linha de recorde →  Exercício
+Anotar (peso) Registra peso corporal (com consentimento)
+REQUISITOS ATENDIDOS
+RF-44, RF-45, RF-46 · RN-10, RN-25
+NOTAS DE IMPLEMENTAÇÃO
+1RM estimado por Epley, só para séries de 1 a 12 reps (RN-10).
+Peso e medidas exigem consentimento específico (RN-25, LGPD).
+1More · Protótipo MVP 13/19
+EXERCICIO.DC.HTML
+PROGRESSO · EXERCÍCIO
+Tudo sobre um exercício: recordes, sugestão de carga, sessões anteriores e como fazer.
+Recordes + sugestão
+ Histórico de sessões
+ Como fazer
+INTERAÇÕES E NAVEGAÇÃO
+ELEMENTO / AÇÃO RESULTADO
+Recordes / Histórico / Como fazer Alterna a seção
+Minha nota Nota fixa do exercício (aparece no treino)
+Seta voltar →  tela de origem
+REQUISITOS ATENDIDOS
+RF-14, RF-15, RF-38, RF-44 · RN-11, RN-12
+NOTAS DE IMPLEMENTAÇÃO
+Sugestão por progressão dupla é sempre sugestão, nunca preenchimento forçado (RN-12).
+Demonstração (imagem/GIF) com cache local após o primeiro download.
+1More · Protótipo MVP 14/19
+PERFIL.DC.HTML
+PERFIL E AJUSTES
+Aba 4. Conta (opcional), ajustes de treino, app e dados.
+Conta e ajustes de treino
+ App e dados
+INTERAÇÕES E NAVEGAÇÃO
+ELEMENTO / AÇÃO RESULTADO
+Entrar ou criar conta Login para backup e vários aparelhos, sem perder dados locais
+Unidade kg/lb Troca a exibição; carga armazenada sempre em kg (RN-13)
+Incremento, descanso, meta Steppers
+Anilhas disponíveis Lista usada pela calculadora de anilhas
+Tema Papel/Noite Troca o tema na hora
+Gamificação, lembrete, tela ligada Switches
+Importar Strong/Hevy · Exportar CSV/JSON Fluxos de arquivo
+Peso e medidas Ver e apagar dados sensíveis
+Excluir conta e dados Oferece exportação antes; apaga em até 30 dias
+REQUISITOS ATENDIDOS
+RF-04, RF-05, RF-06, RF-50, RF-51, RF-52, RF-64, RF-70, RF-71, RF-72 · RN-13, RN-20, RN-22,
+RN-25
+1More · Protótipo MVP 15/19
+NOTAS DE IMPLEMENTAÇÃO
+Exportar é grátis, sempre (RN-22).
+1More · Protótipo MVP 16/19
+ROTINA.DC.HTML
+EDITAR ROTINA
+Criar e editar rotina. Cada exercício abre no lugar para ajustar o modelo das séries.
+Exercício 1 aberto
+INTERAÇÕES E NAVEGAÇÃO
+ELEMENTO / AÇÃO RESULTADO
+Letra e nome Identificam a rotina (A/B/C)
+Toque no exercício Abre/fecha o editor do exercício
+Séries, descanso Steppers
+Reps mín/máx, carga alvo Campos numéricos
+Superset com o próximo Agrupa; a numeração vira 3a/3b
+Remover Tira o exercício da rotina
+≡  (alça) Arrastar para reordenar
+Adicionar exercício →  Adicionar exercício
+Salvar / X →  Treinar
+REQUISITOS ATENDIDOS
+RF-20, RF-21, RF-22, RF-23, RF-24
+1More · Protótipo MVP 17/19
+NOTAS DE IMPLEMENTAÇÃO
+A rotina fica numa pasta (ex.: Divisão ABC).
+1More · Protótipo MVP 18/19
+LIMITES DO PROTÓTIPO
+Cada tela guarda o próprio estado: séries marcadas no Treino ativo não chegam ao Resumo, que usa dados
+de exemplo.
+Arrastar para reordenar (Editar rotina) é só visual.
+Importar, exportar, login e excluir conta não abrem fluxos.
+Seletor de tipo de série (toque na margem) e calculadora de anilhas não foram desenhados como telas
+próprias.
+Dados (rotinas, cargas, datas) são exemplos.
+1More · Protótipo MVP 19/19
