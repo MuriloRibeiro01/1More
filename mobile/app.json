@@ -1,0 +1,70 @@
+{
+  "expo": {
+    "name": "1More",
+    "slug": "onemore",
+    "scheme": "onemore",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.onemore.app"
+    },
+    "android": {
+      "package": "com.onemore.app",
+      "allowBackup": false,
+      "adaptiveIcon": {
+        "backgroundColor": "#f1e8d6",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160,
+          "resizeMode": "contain",
+          "backgroundColor": "#f1e8d6",
+          "dark": {
+            "image": "./assets/splash-icon.png",
+            "backgroundColor": "#17161a"
+          }
+        }
+      ],
+      "expo-localization",
+      "@lovesworking/watermelondb-expo-plugin-sdk-52-plus",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "packagingOptions": {
+              "pickFirst": [
+                "**/libc++_shared.so"
+              ]
+            }
+          },
+          "ios": {
+            "extraPods": [
+              {
+                "name": "simdjson",
+                "configurations": [
+                  "Debug",
+                  "Release"
+                ],
+                "path": "../node_modules/@nozbe/simdjson",
+                "modular_headers": true
+              }
+            ]
+          }
+        }
+      ],
+      "expo-asset"
+    ]
+  }
+}
