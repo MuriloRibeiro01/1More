@@ -2,6 +2,7 @@ import { Database } from '@nozbe/watermelondb';
 import SQLiteAdapter from '@nozbe/watermelondb/adapters/sqlite';
 import { schema } from './schema';
 import { migrations } from './migrations';
+import { modelClasses } from './models';
 
 // Banco local (SQLite). A UI lê e grava só aqui; o motor de sync (src/sync) replica em segundo plano.
 const adapter = new SQLiteAdapter({
@@ -17,7 +18,7 @@ const adapter = new SQLiteAdapter({
 
 export const database = new Database({
   adapter,
-  modelClasses: [],
+  modelClasses,
 });
 
 export { schema, migrations };

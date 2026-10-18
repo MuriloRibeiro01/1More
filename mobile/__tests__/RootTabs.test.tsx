@@ -5,6 +5,8 @@ import i18n from '../src/i18n';
 import { ICON_PATHS } from '../src/components';
 import { RootTabs } from '../src/navigation/RootTabs';
 import type { ThemePreference } from '../src/theme';
+import { DatabaseProvider } from '@nozbe/watermelondb/react';
+import { criarBancoDeTeste } from '../test-utils/db';
 import { renderComTema } from '../test-utils/render';
 
 // expo-font importa expo-asset, que não é resolvível no node_modules atual (achado do T-001); fontes não importam aqui.
@@ -12,9 +14,12 @@ jest.mock('expo-font', () => ({ useFonts: () => [true, null] }));
 
 function montar(preference: ThemePreference = 'light') {
   return renderComTema(
-    <NavigationContainer>
-      <RootTabs />
-    </NavigationContainer>,
+    // Desde o T-005 a aba Treinar lê o banco local.
+    <DatabaseProvider database={criarBancoDeTeste()}>
+      <NavigationContainer>
+        <RootTabs />
+      </NavigationContainer>
+    </DatabaseProvider>,
     preference,
   );
 }

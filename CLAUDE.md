@@ -73,6 +73,9 @@ Decisões de arquitetura ficam em `docs/adr/`. Leia antes de mudar algo estrutur
 ### Convenções
 - Commits: Conventional Commits (`feat(mobile): ...`, `fix(backend): ...`), referenciando a tarefa.
 - Só o Homero executa `git commit`, `merge`, `push`. Os demais apenas editam arquivos.
+- **Uma branch por feature** (`feat/T-xxx-slug`), criada a partir da `main` e publicada no GitHub desde o primeiro commit.
+  Merge em `main` com `--no-ff` (commit "Merge T-xxx: …") só depois das aprovações; a branch fica no remote como registro.
+- Nunca adicionar `Co-Authored-By`/créditos ao Claude em commits, PRs ou tags.
 - Ninguém edita fora do próprio escopo sem combinar com o dono da pasta.
 - Status da tarefa é atualizado no próprio arquivo em `docs/tasks/` (seção "Status").
 

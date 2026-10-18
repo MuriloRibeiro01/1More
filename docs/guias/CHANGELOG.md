@@ -2,6 +2,12 @@
 
 O que mudou em cada tarefa, em linguagem de gente. Detalhes técnicos nos guias e em `docs/tasks/`.
 
+## T-005 — Planilha de treino (rotinas) · 2026-10-18
+
+- **Mobile, 100% local:** na aba Treinar dá para criar, editar e excluir rotinas (exclusão lógica). Os exercícios vêm de um catálogo embarcado com 16 itens e busca que ignora acento. Cada exercício tem 1–10 séries, carga em kg com vírgula, reps mín/máx e descanso de 15 em 15 s.
+- WatermelonDB no schema v2 (`exercise`, `routine`, `routine_exercise`, `routine_set`, já com colunas de sync e UUID v7), com o passo de migração congelado. Novos componentes do DS: `Stepper`, `NumberField`, `TextField`, `Sheet`, `EmptyState`, `RoutineCard`. O "voltar" do Android só age com a aba Treinar em foco.
+- Aprovado em TDD: testes de aceite do Dumont antes do código, suíte 179/179, piloto offline no emulador, review do Sérgio. Detalhes em `docs/tasks/T-005-planilha-de-treino.md`.
+
 ## T-001 — Fundação (Fase 0) · 2026-10-14
 
 **Backend** — aprovado (testes: Dumont, 53/53 · segurança: Leônidas, com ressalvas resolvidas · review: Sérgio)
