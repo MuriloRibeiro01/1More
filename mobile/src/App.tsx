@@ -8,6 +8,7 @@ import { DatabaseProvider } from '@nozbe/watermelondb/react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { database } from './db';
 import { loadThemePreference, saveThemePreference } from './db/preferences';
+import { seedCatalog } from './routines/repository';
 import { RootTabs } from './navigation/RootTabs';
 import { ThemeProvider, useOneMoreFonts, useTheme, type ThemePreference } from './theme';
 
@@ -50,7 +51,9 @@ export default function App() {
 
   useEffect(() => {
     let alive = true;
-    void loadThemePreference(database).then((p) => alive && setPreference(p));
+    // Catálogo embarcado antes da 1ª tela (idempotente). Falha não impede o app de abrir.
+    const seeded = seedCatalog(database).catch((error) => console.error('[db] falha ao semear o catálogo', error));
+    void Promise.all([loadThemePreference(database), seeded]).then(([p]) => alive && setPreference(p));
     return () => {
       alive = false;
     };
