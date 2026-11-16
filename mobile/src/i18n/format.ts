@@ -11,6 +11,12 @@ export function formatNumber(value: number, maxDecimals = 2, loc: string = local
   return new Intl.NumberFormat(loc, { minimumFractionDigits: 0, maximumFractionDigits: maxDecimals }).format(value);
 }
 
+/** Carga para um campo de digitação: vírgula do idioma, sem separador de milhar (o parse não aceita "1.000"). */
+export function formatKgInput(kg: number | null, loc: string = locale()): string {
+  if (kg === null) return '';
+  return new Intl.NumberFormat(loc, { maximumFractionDigits: 2, useGrouping: false }).format(kg);
+}
+
 /** Carga sempre armazenada em kg com 2 casas (RN-13). */
 export function formatWeight(kg: number, unit = 'kg', loc: string = locale()): string {
   return `${formatNumber(kg, 2, loc)} ${unit}`;

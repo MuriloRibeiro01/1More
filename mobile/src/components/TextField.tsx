@@ -14,11 +14,13 @@ export interface TextFieldProps {
   /** No web é o `type` do input; aqui escolhe o teclado. */
   type?: TextInputProps['keyboardType'];
   maxLength?: number;
+  /** Ao sair do campo (gravar sem botão de salvar). */
+  onBlur?: () => void;
   style?: StyleProp<ViewStyle>;
 }
 
 /** Campo de texto sublinhado, com rótulo em caixa alta acima (nunca só placeholder). */
-export function TextField({ label, value, onChange, placeholder, hint, multiline = false, rows = 3, type, maxLength, style }: TextFieldProps) {
+export function TextField({ label, value, onChange, placeholder, hint, multiline = false, rows = 3, type, maxLength, onBlur, style }: TextFieldProps) {
   const { colors: c } = useTheme();
   const [focused, setFocused] = useState(false);
 
@@ -36,7 +38,10 @@ export function TextField({ label, value, onChange, placeholder, hint, multiline
         multiline={multiline}
         numberOfLines={multiline ? rows : 1}
         onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
+        onBlur={() => {
+          setFocused(false);
+          onBlur?.();
+        }}
         style={[
           styles.input,
           multiline && { minHeight: rows * sizes.sizeRule, textAlignVertical: 'top' },

@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusedBackHandler } from '../navigation/useFocusedBackHandler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useDatabase } from '@nozbe/watermelondb/react';
-import { Button, Icon, IconButton, NumberField, Sheet, Stepper, TextField, TopBar } from '../components';
-import { formatWeight } from '../i18n';
-import i18n from '../i18n/instance';
+import { Button, Folha, Icon, IconButton, Linha, NumberField, Sheet, Stepper, TextField, TopBar } from '../components';
+import { formatKgInput, formatWeight } from '../i18n';
 import { deleteRoutine, listCatalog, loadRoutine, RoutineValidationError, saveRoutine } from '../routines/repository';
 import {
   DEFAULT_REST_S,
@@ -22,12 +21,14 @@ import {
   validateRoutine,
 } from '../routines/rules';
 import type { CatalogExercise, ExerciseDraft, RoutineDraft, RoutineError } from '../routines/types';
-import { border, size as sizes, space, text, useTheme } from '../theme';
+import { size as sizes, space, text, useTheme } from '../theme';
 import { ExercisePickerScreen } from './ExercisePickerScreen';
 
 /** Exercício em edição: carga e reps ficam como texto até salvar (o que a pessoa digitou). */
 interface Item {
   key: string;
+  /** Identidade em routine_exercise; ausente até salvar (R-13). */
+  routineExerciseId?: string;
   exerciseId: string;
   name: string;
   sets: number;
@@ -46,12 +47,6 @@ interface Form {
 let keySeq = 0;
 const newKey = () => `item-${keySeq++}`;
 
-/** Carga para o campo, no idioma ativo e sem separador de milhar (o parse não aceita "1.000"). */
-function kgToText(kg: number | null): string {
-  if (kg === null) return '';
-  return new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 2, useGrouping: false }).format(kg);
-}
-
 const snapshot = (form: Form) =>
   JSON.stringify([form.name, form.items.map(({ key: _k, expanded: _e, name: _n, ...rest }) => rest)]);
 
@@ -65,6 +60,7 @@ function toDraft(form: Form, id?: string): { draft: RoutineDraft; parseErrors: R
     const repsMax = parseReps(it.repsMax);
     if (repsMin === undefined || repsMax === undefined) parseErrors.add('invalid_reps');
     return {
+      routineExerciseId: it.routineExerciseId,
       exerciseId: it.exerciseId,
       sets: it.sets,
       weightKg: weight.ok ? weight.value : null,
@@ -109,11 +105,12 @@ export function RoutineEditorScreen({ routineId, onDone }: RoutineEditorScreenPr
         name: draft.name,
         items: draft.exercises.map((ex) => ({
           key: newKey(),
+          routineExerciseId: ex.routineExerciseId,
           exerciseId: ex.exerciseId,
           name: names.get(ex.exerciseId) ?? '',
           sets: ex.sets,
           restSeconds: ex.restSeconds,
-          weight: kgToText(ex.weightKg),
+          weight: formatKgInput(ex.weightKg),
           repsMin: ex.repsMin === null ? '' : String(ex.repsMin),
           repsMax: ex.repsMax === null ? '' : String(ex.repsMax),
           expanded: false,
@@ -219,10 +216,12 @@ export function RoutineEditorScreen({ routineId, onDone }: RoutineEditorScreenPr
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={[styles.root, { backgroundColor: c.paper }]}>
+      <Folha>
       <TopBar title={title} compact left={<IconButton icon="close" label={t('routines.close')} onPress={close} />} />
       {form ? (
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <TextField
+            style={styles.gutter}
             label={t('routines.name')}
             value={form.name}
             onChange={(name) => setForm((f) => f && { ...f, name })}
@@ -231,7 +230,7 @@ export function RoutineEditorScreen({ routineId, onDone }: RoutineEditorScreenPr
             maxLength={MAX_NAME}
           />
 
-          <Text style={[styles.section, { color: c.inkMuted }]}>{t('routines.exercises')}</Text>
+          <Text style={[styles.section, styles.gutter, { color: c.inkMuted }]}>{t('routines.exercises')}</Text>
           {form.items.map((item, index) => (
             <ExerciseEditor
               key={item.key}
@@ -244,12 +243,12 @@ export function RoutineEditorScreen({ routineId, onDone }: RoutineEditorScreenPr
               onRemove={() => removeItem(index)}
             />
           ))}
-          <Button variant="secondary" icon="plus" block onPress={() => setPicking(true)}>
+          <Button variant="secondary" icon="plus" style={styles.gutter} onPress={() => setPicking(true)}>
             {t('routines.addExercise')}
           </Button>
 
           {errors.length || saveFailed ? (
-            <View style={styles.errors}>
+            <View style={[styles.errors, styles.gutter]}>
               {errors.map((e) => (
                 <ErrorLine key={e} message={t(`routines.errors.${e}`)} />
               ))}
@@ -257,11 +256,11 @@ export function RoutineEditorScreen({ routineId, onDone }: RoutineEditorScreenPr
             </View>
           ) : null}
 
-          <Button variant="primary" size="lg" icon="check" block disabled={saving} onPress={save}>
+          <Button variant="primary" size="lg" icon="check" disabled={saving} style={styles.gutter} onPress={save}>
             {t('routines.save')}
           </Button>
           {routineId ? (
-            <Button variant="danger" icon="trash" block onPress={() => setSheet('delete')}>
+            <Button variant="danger" icon="trash" style={styles.gutter} onPress={() => setSheet('delete')}>
               {t('routines.deleteRoutine')}
             </Button>
           ) : null}
@@ -284,6 +283,7 @@ export function RoutineEditorScreen({ routineId, onDone }: RoutineEditorScreenPr
           {t('routines.delete')}
         </Button>
       </Sheet>
+      </Folha>
     </SafeAreaView>
   );
 }
@@ -326,28 +326,25 @@ function ExerciseEditor({ index, item, isFirst, isLast, onChange, onMove, onRemo
     .join(' · ');
 
   return (
-    <View testID={`exercicio-${index}`} style={[styles.block, { backgroundColor: c.paperRaised, borderColor: c.line }]}>
-      <Pressable
-        accessibilityRole="button"
+    <View testID={`exercicio-${index}`}>
+      <Linha
         accessibilityLabel={item.name}
         accessibilityHint={summary}
         accessibilityState={{ expanded: item.expanded }}
         onPress={() => onChange({ expanded: !item.expanded })}
-        android_ripple={{ color: c.paperSunk }}
-        style={({ pressed }) => [styles.header, pressed && { backgroundColor: c.paperSunk }]}
+        margem={<Text style={[styles.number, { color: c.ink }]}>{index + 1}</Text>}
       >
-        <View style={[styles.margin, { borderRightColor: c.marginLine }]}>
-          <Text style={[styles.number, { color: c.ink }]}>{index + 1}</Text>
+        <View style={styles.headerRow}>
+          <View style={styles.headerText}>
+            <Text style={[styles.exerciseName, { color: c.ink }]}>{item.name}</Text>
+            <Text style={[styles.summary, { color: c.inkMuted }]}>{summary}</Text>
+          </View>
+          <Icon name={item.expanded ? 'chevron-down' : 'chevron-right'} color={c.inkMuted} />
         </View>
-        <View style={styles.headerText}>
-          <Text style={[styles.exerciseName, { color: c.ink }]}>{item.name}</Text>
-          <Text style={[styles.summary, { color: c.inkMuted }]}>{summary}</Text>
-        </View>
-        <Icon name={item.expanded ? 'chevron-down' : 'chevron-right'} color={c.inkMuted} />
-      </Pressable>
+      </Linha>
 
       {item.expanded ? (
-        <View style={styles.body}>
+        <View style={[styles.body, styles.gutter]}>
           <View style={styles.steppers}>
             <Stepper
               label={t('routines.sets')}
@@ -402,22 +399,16 @@ function ExerciseEditor({ index, item, isFirst, isLast, onChange, onMove, onRemo
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  content: { paddingHorizontal: space.s4, paddingTop: space.s5, paddingBottom: space.s8, gap: space.s5 },
+  content: { paddingTop: space.s5, paddingBottom: space.s8, gap: space.s5 },
+  // Texto livre fica à direita da linha de margem (44px + 2px).
+  gutter: { paddingLeft: sizes.sizeMargin + space.s3, paddingRight: space.s4 },
   section: { ...text.label },
-  block: { borderWidth: border.borderHair },
-  header: { flexDirection: 'row', alignItems: 'center', minHeight: sizes.sizeRow, paddingRight: space.s3, gap: space.s2 },
-  margin: {
-    width: sizes.sizeMargin,
-    alignSelf: 'stretch',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRightWidth: border.borderPen,
-  },
   number: { ...text.numMd },
-  headerText: { flex: 1, paddingVertical: space.s2, paddingLeft: space.s2 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: space.s2 },
+  headerText: { flex: 1 },
   exerciseName: { ...text.titleMd },
   summary: { ...text.numSm },
-  body: { padding: space.s4, gap: space.s4 },
+  body: { paddingTop: space.s4, paddingBottom: space.s5, gap: space.s4 },
   steppers: { flexDirection: 'row', flexWrap: 'wrap', gap: space.s5 },
   reps: { flexDirection: 'row', gap: space.s4 },
   flex: { flex: 1 },

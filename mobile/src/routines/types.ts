@@ -5,6 +5,8 @@ export interface CatalogExercise {
 }
 
 export interface ExerciseDraft {
+  /** Identidade da linha em routine_exercise (R-13). Ausente = exercício novo na rotina. */
+  routineExerciseId?: string;
   exerciseId: string;
   sets: number;
   /** kg com até 2 casas; null = sem carga alvo. */

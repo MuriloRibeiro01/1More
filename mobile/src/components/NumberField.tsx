@@ -16,6 +16,10 @@ export interface NumberFieldProps {
   /** false para reps (teclado numérico). */
   decimal?: boolean;
   disabled?: boolean;
+  /** Valor a lápis (ink-muted): sugestão ainda não confirmada. */
+  muted?: boolean;
+  /** Ao sair do campo (gravar sem esperar o próximo toque). */
+  onBlur?: () => void;
   style?: StyleProp<ViewStyle>;
 }
 
@@ -31,6 +35,8 @@ export function NumberField({
   size = 'lg',
   decimal = true,
   disabled = false,
+  muted = false,
+  onBlur,
   style,
 }: NumberFieldProps) {
   const { colors: c } = useTheme();
@@ -56,8 +62,11 @@ export function NumberField({
           keyboardType={decimal ? 'decimal-pad' : 'number-pad'}
           selectTextOnFocus
           onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          style={[size === 'lg' ? styles.inputLg : styles.inputMd, { color: disabled ? c.inkFaint : c.ink }]}
+          onBlur={() => {
+            setFocused(false);
+            onBlur?.();
+          }}
+          style={[size === 'lg' ? styles.inputLg : styles.inputMd, { color: disabled ? c.inkFaint : muted ? c.inkMuted : c.ink }]}
         />
         {unit ? <Text style={[styles.unit, { color: c.inkMuted }]}>{unit}</Text> : null}
       </View>

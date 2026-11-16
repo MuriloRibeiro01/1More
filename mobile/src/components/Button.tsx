@@ -9,7 +9,7 @@ import { Icon, type IconName } from './Icon';
  */
 export interface ButtonProps extends Omit<PressableProps, 'children' | 'style'> {
   children: ReactNode;
-  /** primary = tinta cheia, uma por tela. */
+  /** primary = tinta cheia, uma por tela; as demais são texto à caneta, sem caixa. */
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
   /** md = 48px, lg = 56px. */
   size?: 'md' | 'lg';
@@ -31,11 +31,11 @@ function variantColors(c: ThemeColors, variant: NonNullable<ButtonProps['variant
     case 'primary':
       return { bg: c.ink, pressedBg: c.inkMuted, border: c.ink, fg: c.onInk };
     case 'secondary':
-      return { bg: 'transparent', pressedBg: c.paperSunk, border: c.ink, fg: c.ink };
+      return { bg: 'transparent', pressedBg: c.paperSunk, border: 'transparent', fg: c.ink };
     case 'ghost':
       return { bg: 'transparent', pressedBg: c.paperSunk, border: 'transparent', fg: c.ink };
     case 'danger':
-      return { bg: 'transparent', pressedBg: c.paperSunk, border: c.hugger, fg: c.hugger };
+      return { bg: 'transparent', pressedBg: c.paperSunk, border: 'transparent', fg: c.hugger };
   }
 }
 
@@ -87,7 +87,9 @@ export function Button({
     >
       <View style={styles.content}>
         {icon ? <Icon name={icon} size={iconSize} color={fg} /> : null}
-        <Text style={[styles.label, { color: fg }]}>{children}</Text>
+        <Text style={[styles.label, { color: fg }, variant === 'secondary' || variant === 'danger' ? styles.caneta : null]}>
+          {children}
+        </Text>
         {iconRight ? <Icon name={iconRight} size={iconSize} color={fg} /> : null}
       </View>
     </Pressable>
@@ -110,4 +112,5 @@ const styles = StyleSheet.create({
     gap: space.s2,
   },
   label: { ...text.button, textAlign: 'center' },
+  caneta: { textDecorationLine: 'underline' },
 });
