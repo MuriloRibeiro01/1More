@@ -1,0 +1,252 @@
+PROTÓTIPO NAVEGÁVEL · MVP · VERSÃO CADERNO · 12 NOV 2026
+1More
+Protótipo do MVP no estilo caderno de treino: 11 telas, navegação, regras de interação e a linguagem visual para o desenvolvimento.
+Substitui a versão de 14 out (com cartões). Fonte: canvas “1More — Protótipo MVP” (artifact Design). Tokens e cores continuam os do Design System 1More (Garagem 69); o estilo das telas está em caderno.css. Requisitos (RF/RNF/RN): documento de pesquisa e requisitos.
+
+LINGUAGEM VISUAL: O CADERNO
+O que mudou em relação à primeira versão: menos elementos por tela, nada de cartões, e a sensação de escrever num caderno de treino. Regras para implementar:
+REGRA — COMO FAZER
+Folha — Fundo papel; só a linha de margem vermelha fixa a 44 px. Nada de pauta parada no fundo.
+A linha é do conteúdo — Cada linha de dado (série, rotina, item, ajuste) desenha o próprio sublinhado de 1 px na cor rule, de borda a borda, e rola junto com o texto.
+Ritmo — Texto em linhas de 28 px; linhas tocáveis com 56 px (duas pautas), texto apoiado na de baixo.
+Margem — Coluna de 44 px para número da série, letra da rotina, data, caixinha de check ou carimbo PR.
+Títulos — Racing Sans One em caixa alta, grifados com sublinhado laranja (hugger) de 3 px; nome de exercício com régua de tinta de 2 px.
+Tinta e lápis — Tinta (ink) para tudo que importa; lápis (ink-muted) só para dica: valor anterior, data, detalhe.
+Ações — Um botão cheio por tela. O resto é link sublinhado à caneta ou a própria linha tocável.
+Sem caixas — Sem cartões, sombras ou contornos. Valores em livro-caixa: “Volume ........ 12.340 kg”.
+Destaques — Série da vez: faixa amarela (stripe-wash) atravessando a linha, texto em tinta. Recorde: carimbo PR laranja. Concluída: caixinha azul Grabber.
+Abas — Só nas 4 telas principais; telas de fluxo (treino, catálogo, resumo, edição) têm barra de topo com voltar.
+No React Native: o sublinhado de cada linha é um View de 1 px no fim do item (ou borderBottomWidth: 1), nunca uma imagem de fundo. A margem é uma View absoluta de 2 px no container da tela.
+
+NAVEGAÇÃO
+Quatro abas fixas, que não mudam entre versões (RNF-08). O treino é o centro: Treinar abre direto na rotina do dia, e o treino ativo volta de qualquer aba pela faixa “Retomar”. As abas aparecem só nas 4 telas principais; telas de fluxo (treino, catálogo, resumo, edição) têm barra de topo com voltar.
+ABA · TELA · FUNÇÃO
+Treinar · Início · Rotina do dia, rotinas, semana
+Histórico · Lista / Mês · Treinos passados, retroativo
+Progresso · Gráfico · Evolução e recordes
+Perfil · Ajustes · Conta, unidades, dados
+FLUXO PRINCIPAL
+Capa → Onboarding (4 passos) → Treinar → Treino ativo ⇄ Adicionar exercício → Treino finalizado → Treinar
+Histórico → Treino passado → (Repetir) → Treino ativo
+Progresso → Exercício
+Treinar → Editar rotina ⇄ Adicionar exercício
+CONTAGEM DE TOQUES
+AÇÃO · TOQUES · CAMINHO
+Abrir o app e registrar a 1ª série · 2 · Treinar → Começar treino → caixinha
+Concluir uma série · 1 · Caixinha da série
+Corrigir carga ou reps · 1 + digitar · Toque no número
+Finalizar treino · 1 (+1 se houver pendentes) · Finalizar → (folha)
+Voltar a um treino minimizado · 1 · Faixa “Retomar”
+Repetir um treino antigo · 3 · Histórico → treino → Repetir
+Ver recordes de um exercício · 2 · Progresso → recorde
+REGRAS GERAIS
+- Alvo mínimo de toque 48 dp; tudo do treino alcançável com uma mão (RNF-09).
+- Nenhuma ação espera a rede: salvar, finalizar e consultar histórico funcionam em modo avião (RNF-01, RN-01).
+- Escolhas e confirmações em folha que sobe de baixo, nunca diálogo central.
+- Destrutivo sempre confirma e é lógico (tombstone) por 30 dias (RN-20).
+- Temas Papel (claro) e Noite (escuro) em todas as telas (RF-72).
+
+ONBOARDING.DC.HTML
+0 · BOAS-VINDAS E ONBOARDING
+Primeira abertura. Capa do caderno com um único botão. Entrar é opcional (RF-02). Quatro passos curtos coletam o mínimo (RF-03); o último já oferece jeitos de começar a treinar.
+Telas no PDF: Capa · Objetivo · Dias por semana · Unidade e nível · Como começar
+INTERAÇÕES E NAVEGAÇÃO
+ELEMENTO / AÇÃO — RESULTADO
+Começar — Abre o passo 1 em modo local (sem conta)
+Já tenho conta — Login (Google, Apple, e-mail) — no protótipo avança
+Voltar (seta) — Passo anterior
+Objetivo — Escolha única com a caixinha na margem
+− / + dias — 1 a 7; define a meta da sequência semanal (RN-14)
+Quilos / Libras · Nível — Alternância escrita, sublinhado marca o escolhido
+Usar divisão ABC pronta — → Treinar
+Montar minha rotina — → Editar rotina
+Treino livre — → Treino ativo
+REQUISITOS ATENDIDOS
+RF-01, RF-02, RF-03, RF-71 · RN-14
+NOTAS DE IMPLEMENTAÇÃO
+- Sem conta, tudo fica no SQLite; vincular depois não perde dados.
+- Não pede peso, altura nem nascimento: isso é opcional no Perfil (RF-04, RN-25).
+
+MAIN.DC.HTML
+1 · TREINAR (INÍCIO)
+Tela que abre o app. A rotina do dia vem escrita em destaque, com o único botão cheio da tela. Do app fechado à primeira série: 2 toques.
+Telas no PDF: Semana, rotina do dia e rotinas
+INTERAÇÕES E NAVEGAÇÃO
+ELEMENTO / AÇÃO — RESULTADO
+Começar treino — → Treino ativo da rotina do dia
+Linha da rotina (A, B…) — 1 toque → Treino ativo daquela rotina
++ Nova · Editar rotinas — → Editar rotina
+Treino livre — → Treino ativo sem exercícios
+Faixa amarela “Retomar” — Aparece se existir treino ativo (inclusive após crash) → Treino ativo
+Semana — Dias treinados circulados à caneta; hoje sublinhado em laranja
+Abas — Treinar · Histórico · Progresso · Perfil
+REQUISITOS ATENDIDOS
+RF-30, RF-34, RF-52, RF-60 · RN-02, RN-04, RN-14, RN-15
+NOTAS DE IMPLEMENTAÇÃO
+- A rotina do dia é a que está há mais tempo sem ser feita.
+- Se o treino ativo estiver parado há mais de 4 h, a faixa vira “Esqueceu de finalizar?” (RN-04).
+- A semana some com a gamificação desligada (RF-64).
+
+TREINO.DC.HTML
+2 · TREINO ATIVO
+O coração do app, como uma página de diário de treino. Nome do exercício grifado, cada série numa linha, número da série na margem. Valores da sessão anterior aparecem a lápis e entram sozinhos ao tocar na caixinha. A série da vez leva a faixa amarela. Sem abas durante o treino.
+Telas no PDF: Início · 2 séries + descanso · Carga acima do recorde → PR · Finalizar com pendentes
+INTERAÇÕES E NAVEGAÇÃO
+ELEMENTO / AÇÃO — RESULTADO
+Caixinha da série (1 toque) — Conclui com os valores pré-preenchidos, grava no SQLite e inicia o descanso do exercício
+Toque no número — Edita carga ou reps na própria linha (teclado decimal/numérico)
+Margem da série — Número, ou A (aquecimento), D (drop), F (falha)
++ série — Nova linha copiando a última
+··· do exercício — Folha: Trocar exercício, Ver histórico e recordes, Remover
+Descanso · +15s · Pular — Linha fixa no rodapé; ao zerar fica laranja e vibra
++ Adicionar exercício — → Adicionar exercício
+Finalizar — Tudo feito → Treino finalizado; com pendentes → folha RN-06; nada feito → folha RN-05 (descartar)
+Seta para baixo — Minimiza → Treinar (faixa Retomar)
+REQUISITOS ATENDIDOS
+RF-30 a RF-38, RF-40, RF-43, RF-72 · RN-01, RN-03, RN-05, RN-06, RN-08, RN-11, RN-23 · RNF-02, RNF-04, RNF-09, RNF-13
+NOTAS DE IMPLEMENTAÇÃO
+- Gravar a série no SQLite ANTES de mudar o visual (RNF-02), em < 100 ms; timer por horário de término + notificação local.
+- PR só em séries válidas; tela sempre ligada com treino ativo; zero anúncios.
+
+CATALOGO.DC.HTML
+2A · ADICIONAR EXERCÍCIO
+Catálogo embarcado, funciona offline. Lista de verificação: a caixinha fica na margem.
+Telas no PDF: Lista e filtros · Busca “sup”
+INTERAÇÕES E NAVEGAÇÃO
+ELEMENTO / AÇÃO — RESULTADO
+Linha de busca — Filtra por nome, ignorando acentos
+Todos · Peito · Costas… — Filtro escrito; o sublinhado marca o ativo
+Linha do exercício — Marca/desmarca (seleção múltipla)
+Adicionar N exercícios — → Treino ativo
++ Criar exercício próprio — Formulário de exercício personalizado (RF-12)
+Seta voltar — → Treino ativo sem mudanças
+REQUISITOS ATENDIDOS
+RF-10, RF-11, RF-12, RF-13, RF-33
+NOTAS DE IMPLEMENTAÇÃO
+- A mesma tela serve para Editar rotina (o destino do botão muda).
+- Exercício do catálogo nunca é editado, só ocultado (RN-19).
+
+RESUMO.DC.HTML
+3 · TREINO FINALIZADO
+Resumo salvo na hora, com ou sem rede, no formato de livro-caixa. Recordes com o carimbo PR na margem. Nada obrigatório.
+Telas no PDF: Resumo
+INTERAÇÕES E NAVEGAÇÃO
+ELEMENTO / AÇÃO — RESULTADO
+Fechar — → Treinar
+Nota — Opcional, em linhas pautadas; salva com o treino
+REQUISITOS ATENDIDOS
+RF-38, RF-40, RF-43, RF-60, RF-61 · RN-01, RN-09, RN-16, RN-17
+NOTAS DE IMPLEMENTAÇÃO
+- Duração = início até a última série concluída (RN-03).
+- Linha “Semana” some com a gamificação desligada.
+- Sync entra na fila; “salvo no aparelho” quando não há rede.
+
+HISTORICO.DC.HTML
+HISTÓRICO
+Aba 2. Lista por semana com a data na margem, ou o mês com os dias treinados circulados à caneta.
+Telas no PDF: Lista · Mês
+INTERAÇÕES E NAVEGAÇÃO
+ELEMENTO / AÇÃO — RESULTADO
+Lista · Mês — Alterna a visualização
+Linha de treino — → Treino passado
+Dia no mês — Mostra o treino do dia; toque → Treino passado
++ Registrar treino passado — Treino retroativo
+REQUISITOS ATENDIDOS
+RF-41, RF-42, RF-47 · RN-07, RN-24
+NOTAS DE IMPLEMENTAÇÃO
+- Atividades não-musculação (corrida, luta) entram na mesma lista.
+- Semana começa na segunda (configurável).
+
+TREINODETALHE.DC.HTML
+HISTÓRICO · TREINO PASSADO
+O treino como ficou anotado: cada exercício numa linha de diário (carga × reps de cada série).
+Telas no PDF: Treino passado · Excluir
+INTERAÇÕES E NAVEGAÇÃO
+ELEMENTO / AÇÃO — RESULTADO
+Editar / Pronto — Libera as linhas para correção; PRs e volume recalculam (RN-11)
+Repetir este treino — → Treino ativo com os mesmos exercícios
+Excluir treino — Folha de confirmação → Histórico (exclusão lógica, 30 dias)
+Seta voltar — → Histórico
+REQUISITOS ATENDIDOS
+RF-41, RF-43 · RN-11, RN-16, RN-20
+NOTAS DE IMPLEMENTAÇÃO
+- Formato da linha: 82,5×10 · 82,5×9 · 80×9 (D = drop set).
+- Editar não duplica XP (RN-16).
+
+PROGRESSO.DC.HTML
+PROGRESSO
+Aba 3. Gráfico desenhado direto na folha, sem moldura nem grade; o recorde marcado em laranja.
+Telas no PDF: Gráfico · Recordes e séries na semana
+INTERAÇÕES E NAVEGAÇÃO
+ELEMENTO / AÇÃO — RESULTADO
+Supino reto · Agachamento · Remada — Troca o exercício do gráfico
+1RM · Melhor série · Volume — Troca a métrica
+Linha de recorde — → Exercício
+REQUISITOS ATENDIDOS
+RF-44, RF-45 · RN-10
+NOTAS DE IMPLEMENTAÇÃO
+- 1RM estimado por Epley, só para séries de 1 a 12 reps (RN-10).
+- Séries por músculo na semana como uma linha de texto (RF-45).
+- Peso corporal foi para o Perfil.
+
+EXERCICIO.DC.HTML
+PROGRESSO · EXERCÍCIO
+Tudo sobre um exercício: recordes, sugestão de carga, sessões anteriores e como fazer.
+Telas no PDF: Recordes · Histórico · Como fazer
+INTERAÇÕES E NAVEGAÇÃO
+ELEMENTO / AÇÃO — RESULTADO
+Recordes · Histórico · Como fazer — Alterna a seção
+Minha nota — Nota fixa do exercício
+Seta voltar — → tela de origem
+REQUISITOS ATENDIDOS
+RF-14, RF-15, RF-38, RF-44 · RN-11, RN-12
+NOTAS DE IMPLEMENTAÇÃO
+- Sugestão por progressão dupla é só sugestão (RN-12).
+- Demonstração com cache local após o primeiro download.
+
+PERFIL.DC.HTML
+PERFIL E AJUSTES
+Aba 4. Ajustes como linhas escritas: o valor fica à direita e troca a cada toque, sem interruptores.
+Telas no PDF: Conta e treino · App e dados
+INTERAÇÕES E NAVEGAÇÃO
+ELEMENTO / AÇÃO — RESULTADO
+Entrar para ter backup — Login para backup e vários aparelhos, sem perder dados locais
+Unidade — kg ⇄ lb; carga armazenada sempre em kg (RN-13)
+Incremento, descanso, meta — Toque passa para o próximo valor (no app: lista de escolha)
+Anilhas — Lista usada pela calculadora de anilhas
+Tema — Papel ⇄ Noite, na hora
+Sequência e XP · Lembrete · Tela ligada — ligado ⇄ desligado
+Peso corporal · Exportar · Importar — Fluxos de dados (peso com consentimento)
+Excluir conta e dados — Oferece exportar antes; apaga em até 30 dias
+REQUISITOS ATENDIDOS
+RF-04, RF-05, RF-06, RF-46, RF-50, RF-51, RF-52, RF-64, RF-70, RF-71, RF-72 · RN-13, RN-20, RN-22, RN-25
+NOTAS DE IMPLEMENTAÇÃO
+- Exportar é grátis, sempre (RN-22).
+
+ROTINA.DC.HTML
+EDITAR ROTINA
+Letra na margem, nome escrito grande. Cada exercício é uma linha; tocar abre os ajustes logo abaixo.
+Telas no PDF: Exercício 1 aberto
+INTERAÇÕES E NAVEGAÇÃO
+ELEMENTO / AÇÃO — RESULTADO
+Letra e nome — Identificam a rotina (A/B/C)
+Toque no exercício — Abre/fecha os ajustes
+Séries, descanso − / + — Ajuste no lugar
+Superset com o próximo — Agrupa; a margem vira 3a/3b
+Remover — Tira da rotina
+≡ — Arrastar para reordenar
++ Adicionar exercício — → Adicionar exercício
+Salvar / X — → Treinar
+REQUISITOS ATENDIDOS
+RF-20, RF-21, RF-22, RF-23, RF-24
+NOTAS DE IMPLEMENTAÇÃO
+- A rotina fica numa pasta (ex.: Divisão ABC).
+
+LIMITES DO PROTÓTIPO
+- Cada tela guarda o próprio estado: séries marcadas no treino não chegam ao resumo, que usa dados de exemplo.
+- Arrastar para reordenar (Editar rotina) é só visual.
+- Login, importar, exportar, peso corporal e excluir conta não abrem fluxos.
+- Ajustes do Perfil trocam o valor a cada toque; no app, abrem uma lista de escolha.
+- Seletor de tipo de série (toque na margem) e calculadora de anilhas ainda não têm tela própria.
+- Os componentes do Design System (bundle e PDF) ainda mostram o visual com cartões; o estilo caderno está em caderno.css no canvas.
+- Dados (rotinas, cargas, datas) são exemplos.
