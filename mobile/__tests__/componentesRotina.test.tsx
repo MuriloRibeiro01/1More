@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it, jest } from '@jest/globals';
 import { StyleSheet } from 'react-native';
 import { fireEvent, screen } from '@testing-library/react-native';
 import i18n from '../src/i18n';
-import { Button, EmptyState, NumberField, RoutineCard, Sheet, Stepper, TextField } from '../src/components';
+import { Button, EmptyState, NumberField, Sheet, Stepper, TextField } from '../src/components';
 import { renderComTema } from '../test-utils/render';
 
 // Componentes do DS usados na planilha (T-005): comportamento e acessibilidade.
@@ -83,29 +83,12 @@ describe('Sheet', () => {
   });
 });
 
-describe('EmptyState e RoutineCard', () => {
+describe('EmptyState', () => {
   it('EmptyState: título, frase e ação', async () => {
     await renderComTema(<EmptyState title="Caderno novo" body="Monte sua primeira rotina." action={<Button>Nova rotina</Button>} />);
     expect(screen.getByRole('header', { name: 'Caderno novo' })).toBeOnTheScreen();
     expect(screen.getByText('Monte sua primeira rotina.')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Nova rotina' })).toBeOnTheScreen();
-  });
-
-  it('RoutineCard: abre ao tocar, lista os exercícios e só mostra "Começar" com onStart', async () => {
-    const onOpen = jest.fn();
-    const { rerender } = await renderComTema(<RoutineCard name="Treino A" exercises={['Supino', 'Crucifixo']} onOpen={onOpen} />);
-    const card = screen.getByRole('button', { name: /Treino A/ });
-    expect(alvo(card)).toBeGreaterThanOrEqual(48);
-    expect(screen.getByText(/Supino · Crucifixo/)).toBeOnTheScreen();
-    expect(screen.queryByRole('button', { name: 'Começar' })).toBeNull();
-    await fireEvent.press(card);
-    expect(onOpen).toHaveBeenCalled();
-
-    const onStart = jest.fn();
-    await rerender(<RoutineCard letter="A" name="Treino A" onOpen={onOpen} onStart={onStart} />);
-    await fireEvent.press(screen.getByRole('button', { name: 'Começar' }));
-    expect(onStart).toHaveBeenCalled();
-    expect(screen.getByText('A')).toBeOnTheScreen();
   });
 });
 

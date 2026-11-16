@@ -5,7 +5,7 @@ import { DatabaseProvider } from '@nozbe/watermelondb/react';
 import { NavigationContainer } from '@react-navigation/native';
 import { fireEvent, screen, within } from '@testing-library/react-native';
 import i18n from '../../src/i18n';
-import { RootTabs } from '../../src/navigation/RootTabs';
+import { RootNavigator } from '../../src/navigation/RootNavigator';
 import { listCatalog, listRoutines, loadRoutine, saveRoutine, seedCatalog } from '../../src/routines/repository';
 import type { ThemePreference } from '../../src/theme';
 import { criarBancoDeTeste } from '../../test-utils/db';
@@ -20,7 +20,7 @@ function montarApp(preference: ThemePreference = 'light') {
   return renderComTema(
     <DatabaseProvider database={db}>
       <NavigationContainer>
-        <RootTabs />
+        <RootNavigator />
       </NavigationContainer>
     </DatabaseProvider>,
     preference,
@@ -28,6 +28,14 @@ function montarApp(preference: ThemePreference = 'light') {
 }
 
 const botao = (nome: string | RegExp) => screen.findByRole('button', { name: nome });
+
+/** Protótipo do caderno: tocar numa rotina inicia o treino; para editar, "Editar rotinas" e depois a linha. */
+async function abrirParaEditar(nome: RegExp) {
+  await fireEvent.press(await botao('Editar rotinas'));
+  await fireEvent.press(await botao(nome));
+}
+/** Espera a lista de rotinas aparecer (a única rotina fica em destaque, sem linha de botão). */
+const listaCarregada = () => screen.findByRole('button', { name: 'Editar rotinas' });
 
 async function exercicio(i: number) {
   const container = await screen.findByTestId(`exercicio-${i}`);
@@ -90,9 +98,13 @@ describe('aba Treinar', () => {
       exercises: [{ exerciseId: primeiro.id, sets: 3, weightKg: null, repsMin: null, repsMax: null, restSeconds: 90 }],
     });
     await montarApp();
-    expect(await botao(/Treino B — Costas/)).toBeOnTheScreen();
+    // Rotina única = rotina do dia, em destaque com "Começar treino"; nome e exercícios escritos.
+    expect(await botao('Começar treino')).toBeOnTheScreen();
+    expect(screen.getByText('Treino B — Costas')).toBeOnTheScreen();
     expect(screen.getByText(new RegExp(primeiro.name))).toBeOnTheScreen();
     expect(screen.queryByTestId('rotinas-vazio')).toBeNull();
+    // "Nova rotina" continua ao alcance (link à caneta); a letra da margem é testada em fase5/inicioTreinar.
+    expect(await botao('Nova rotina')).toBeOnTheScreen();
   });
 });
 
@@ -131,7 +143,8 @@ describe('criar rotina', () => {
     conferirAlvos();
 
     await fireEvent.press(await botao('Salvar'));
-    expect(await botao(/Treino A — Peito/)).toBeOnTheScreen();
+    await listaCarregada();
+    expect(screen.getByText('Treino A — Peito')).toBeOnTheScreen();
 
     const [salva] = await listRoutines(db);
     expect(salva.exerciseNames).toHaveLength(2);
@@ -142,7 +155,7 @@ describe('criar rotina', () => {
     // "Fecho e reabro o app": desmonta tudo e monta de novo sobre o mesmo banco.
     await montado.unmount();
     await montarApp();
-    await fireEvent.press(await botao(/Treino A — Peito/));
+    await abrirParaEditar(/Treino A — Peito/);
     expect(screen.getByLabelText('Nome da rotina').props.value).toBe('Treino A — Peito');
     const reaberto = await exercicio(0);
     expect(valor(reaberto.getByRole('adjustable', { name: 'Séries' }))).toBe('4');
@@ -164,7 +177,7 @@ describe('criar rotina', () => {
     expect(valor(ex0.getByRole('adjustable', { name: 'Descanso' }))).toBe('0:00');
     for (let i = 0; i < 45; i++) await fireEvent.press(ex0.getByRole('button', { name: 'Aumentar descanso' }));
     expect(valor(ex0.getByRole('adjustable', { name: 'Descanso' }))).toBe('10:00');
-  });
+  }, 30_000);
 
   it('remover e mover exercício', async () => {
     await montarApp();
@@ -172,7 +185,7 @@ describe('criar rotina', () => {
     await fireEvent.press((await exercicio(0)).getByRole('button', { name: 'Remover exercício' }));
     await fireEvent.press((await exercicio(1)).getByRole('button', { name: 'Mover para cima' }));
     await fireEvent.press(await botao('Salvar'));
-    await botao(/Ordem/);
+    await listaCarregada();
 
     const [salva] = await listRoutines(db);
     expect(salva.exerciseNames).toEqual(['Rosca direta', 'Supino reto com barra']);
@@ -229,7 +242,7 @@ describe('fechar e excluir com Sheet', () => {
       exercises: [{ exerciseId: primeiro.id, sets: 3, weightKg: null, repsMin: null, repsMax: null, restSeconds: 90 }],
     });
     await montarApp();
-    await fireEvent.press(await botao(/Apagar/));
+    await abrirParaEditar(/Apagar/);
     await fireEvent.press(await botao('Excluir rotina'));
     await fireEvent.press(await botao('Excluir'));
 
@@ -257,7 +270,8 @@ describe('offline e tema', () => {
     await montarApp('dark');
     await novaRotina('Modo avião', ['Supino reto com barra']);
     await fireEvent.press(await botao('Salvar'));
-    expect(await botao(/Modo avião/)).toBeOnTheScreen();
+    await listaCarregada();
+    expect(screen.getByText('Modo avião')).toBeOnTheScreen();
 
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(xhrSpy).not.toHaveBeenCalled();

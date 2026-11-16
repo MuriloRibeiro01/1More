@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
-import { border, space, text, useTheme } from '../theme';
+import { space, text, useTheme } from '../theme';
+import { Titulo } from './Titulo';
 
 export interface TopBarProps {
   title: ReactNode;
@@ -26,20 +27,9 @@ export function TopBar({ title, kicker, compact = false, left, right, style }: T
               {kicker}
             </Text>
           ) : null}
-          <Text
-            accessibilityRole="header"
-            style={[compact ? styles.titleCompact : styles.title, { color: c.ink }]}
-            numberOfLines={compact ? 2 : 1}
-          >
-            {title}
-          </Text>
+          <Titulo tamanho={compact ? 'compact' : 'lg'}>{title}</Titulo>
         </View>
         {right ? <View style={styles.side}>{right}</View> : null}
-      </View>
-      {/* Sublinhado duplo de livro-caixa: dois traços de 1px em tinta, 2px entre eles. */}
-      <View style={styles.underline} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-        <View style={[styles.rule, { backgroundColor: c.ink }]} />
-        <View style={[styles.rule, { backgroundColor: c.ink }]} />
       </View>
     </View>
   );
@@ -58,11 +48,4 @@ const styles = StyleSheet.create({
   side: { justifyContent: 'center' },
   center: { flex: 1, paddingBottom: space.s2 },
   kicker: { ...text.numSm },
-  title: { ...text.titleLg },
-  // DS: compact = título de 24px; mesma família/caixa do title-lg.
-  titleCompact: { ...text.titleLg, fontSize: 24, lineHeight: 28 },
-  underline: {
-    gap: border.borderPen,
-  },
-  rule: { height: border.borderHair },
 });

@@ -77,7 +77,9 @@ describe('salvar e reabrir', () => {
     };
     const id = await saveRoutine(db, draft);
     expect(id).toMatch(UUID_V7);
-    expect(await loadRoutine(db, id)).toEqual({ id, ...draft });
+    // routineExerciseId é atribuído no primeiro save (R-13): o resto volta idêntico.
+    const { exercises, ...resto } = await loadRoutine(db, id);
+    expect({ ...resto, exercises: exercises.map(({ routineExerciseId: _r, ...e }) => e) }).toEqual({ id, ...draft });
     expect(await listRoutines(db)).toEqual([
       { id, name: 'Treino A — Peito', exerciseNames: ['Supino reto com barra', 'Agachamento livre'] },
     ]);
@@ -200,7 +202,7 @@ describe('atomicidade (RNF-02)', () => {
     await expect(saveRoutine(db, { id, name: 'Depois', exercises: [ex(agachamento, { sets: 2 })] })).rejects.toThrow();
     jest.restoreAllMocks();
 
-    expect(await loadRoutine(db, id)).toEqual({ id, name: 'Antes', exercises: [ex(supino, { sets: 4 })] });
+    expect(await loadRoutine(db, id)).toMatchObject({ id, name: 'Antes', exercises: [ex(supino, { sets: 4 })] });
   });
 });
 

@@ -58,8 +58,59 @@ export const routineSetTable = tableSchema({
   ],
 });
 
+// Treino (Fase 4): execução e histórico. Série gravada a cada toque (RNF-02); status 'active' nunca sai como finalizado sem ação.
+export const workoutTable = tableSchema({
+  name: 'workout',
+  columns: [
+    { name: 'routine_id', type: 'string', isOptional: true, isIndexed: true },
+    { name: 'name', type: 'string' },
+    { name: 'started_at', type: 'number' }, // UTC em ms (RN-24)
+    { name: 'ended_at', type: 'number', isOptional: true }, // última série concluída (RN-03)
+    { name: 'tz_offset_min', type: 'number' }, // fuso do aparelho no início; o dia do treino é a data local
+    { name: 'status', type: 'string', isIndexed: true }, // active | finished
+    { name: 'notes', type: 'string', isOptional: true },
+    ...syncColumns,
+  ],
+});
+
+export const workoutExerciseTable = tableSchema({
+  name: 'workout_exercise',
+  columns: [
+    { name: 'workout_id', type: 'string', isIndexed: true },
+    { name: 'exercise_id', type: 'string', isIndexed: true },
+    { name: 'sort_order', type: 'number' },
+    { name: 'superset_group', type: 'number', isOptional: true },
+    { name: 'rest_seconds', type: 'number', isOptional: true },
+    { name: 'notes', type: 'string', isOptional: true },
+    ...syncColumns,
+  ],
+});
+
+export const workoutSetTable = tableSchema({
+  name: 'workout_set',
+  columns: [
+    { name: 'workout_exercise_id', type: 'string', isIndexed: true },
+    { name: 'sort_order', type: 'number' },
+    { name: 'set_type', type: 'string' }, // warmup | normal | drop | failure
+    { name: 'weight_kg', type: 'number', isOptional: true }, // kg, 2 casas (RN-13)
+    { name: 'reps', type: 'number', isOptional: true },
+    { name: 'completed_at', type: 'number', isOptional: true }, // nulo = pendente
+    ...syncColumns,
+  ],
+});
+
+// Nota do usuário sobre um exercício (v4). Tabela própria: o catálogo é read-only (RN-19).
+export const exerciseNoteTable = tableSchema({
+  name: 'exercise_note',
+  columns: [
+    { name: 'exercise_id', type: 'string', isIndexed: true },
+    { name: 'text', type: 'string' },
+    ...syncColumns,
+  ],
+});
+
 // Ao mudar o schema: suba `version` e adicione o passo correspondente em migrations.ts.
 export const schema = appSchema({
-  version: 2,
-  tables: [exerciseTable, routineTable, routineExerciseTable, routineSetTable],
+  version: 4,
+  tables: [exerciseTable, routineTable, routineExerciseTable, routineSetTable, workoutTable, workoutExerciseTable, workoutSetTable, exerciseNoteTable],
 });

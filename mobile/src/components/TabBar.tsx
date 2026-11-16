@@ -25,7 +25,7 @@ export function TabBar({ items, active, onChange }: TabBarProps) {
       accessibilityRole="tablist"
       style={[
         styles.root,
-        { backgroundColor: c.paperRaised, borderTopColor: c.line, paddingBottom: insets.bottom },
+        { backgroundColor: c.paper, borderTopColor: c.rule, paddingBottom: insets.bottom },
       ]}
     >
       {items.map((item) => {

@@ -4,7 +4,7 @@ import { DatabaseProvider } from '@nozbe/watermelondb/react';
 import { NavigationContainer } from '@react-navigation/native';
 import { act, fireEvent, screen } from '@testing-library/react-native';
 import i18n from '../../src/i18n';
-import { RootTabs } from '../../src/navigation/RootTabs';
+import { RootNavigator } from '../../src/navigation/RootNavigator';
 import { seedCatalog } from '../../src/routines/repository';
 import { criarBancoDeTeste } from '../../test-utils/db';
 import { renderComTema } from '../../test-utils/render';
@@ -104,7 +104,8 @@ describe('migração v2 congelada (review Sérgio, bloqueante 1)', () => {
       const tabelas = Object.values(schemaMod).filter(
         (v): v is TabelaSchema => !!v && typeof v === 'object' && Array.isArray((v as TabelaSchema).columnArray),
       );
-      expect(tabelas.map((t) => t.name).sort()).toEqual(Object.keys(V2).sort());
+      // Desde a v3 o schema tem mais tabelas; o que importa aqui é que as 4 da v2 continuam lá.
+      expect(tabelas.map((t) => t.name)).toEqual(expect.arrayContaining(Object.keys(V2)));
       for (const t of tabelas) {
         // Simula a v3 mexendo no schema: coluna nova e uma coluna existente alterada no lugar.
         const nova = { name: 'coluna_da_v3', type: 'string' };
@@ -132,7 +133,7 @@ describe('voltar do Android só vale com a aba Treinar em foco (review Sérgio, 
     await renderComTema(
       <DatabaseProvider database={db}>
         <NavigationContainer>
-          <RootTabs />
+          <RootNavigator />
         </NavigationContainer>
       </DatabaseProvider>,
     );
@@ -148,21 +149,16 @@ describe('voltar do Android só vale com a aba Treinar em foco (review Sérgio, 
     expect(await screen.findByRole('button', { name: 'Descartar' })).toBeOnTheScreen();
   });
 
-  it('em Histórico, voltar não abre o Sheet do editor e o editor continua aberto ao voltar para Treinar', async () => {
+  it('depois de descartar o editor, voltar em Histórico não reabre o Sheet (o editor não fica montado)', async () => {
     await abrirEditorComMudanca();
-    await fireEvent.press(screen.getByRole('tab', { name: 'Histórico' }));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Fechar' }));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Descartar' }));
+    await fireEvent.press(await screen.findByRole('tab', { name: 'Histórico' }));
     expect(await screen.findByRole('header', { name: 'Histórico' })).toBeOnTheScreen();
 
     await act(async () => {
       voltarDoAndroid();
     });
-    expect(screen.queryByRole('button', { name: 'Descartar' })).toBeNull();
-
-    // O voltar pode ter levado a navegação de volta para Treinar; se não, vamos até lá.
-    if (!screen.getByRole('tab', { name: 'Treinar' }).props.accessibilityState?.selected) {
-      await fireEvent.press(screen.getByRole('tab', { name: 'Treinar' }));
-    }
-    expect((await screen.findByLabelText('Nome da rotina')).props.value).toBe('Rascunho');
     expect(screen.queryByRole('button', { name: 'Descartar' })).toBeNull();
   });
 });

@@ -1,5 +1,5 @@
 import { Q, type Database, type Model } from '@nozbe/watermelondb';
-import { uuidv7 } from '../db/uuid';
+import { active, bySortOrder, prepareCreate, raw, setFields, type Raw } from '../db/rows';
 import { CATALOG_SEED } from './catalog';
 import { DEFAULT_REST_S, roundKg, validateRoutine } from './rules';
 import type { CatalogExercise, ExerciseDraft, RoutineDraft, RoutineError, RoutineSummary } from './types';
@@ -12,23 +12,6 @@ export class RoutineValidationError extends Error {
     super(`rotina inválida: ${errors.join(', ')}`);
     this.name = 'RoutineValidationError';
   }
-}
-
-type Raw = Record<string, string | number | null>;
-const raw = (m: Model) => m._raw as unknown as Raw;
-const active = Q.where('deleted_at', null);
-const bySortOrder = (a: Model, b: Model) => Number(raw(a).sort_order) - Number(raw(b).sort_order);
-
-function setFields(record: Model, fields: Raw) {
-  for (const [column, value] of Object.entries(fields)) record._setRaw(column, value);
-}
-
-/** Prepara a criação de uma linha sincronizável com id UUID v7 e carimbos do app. */
-function prepareCreate(db: Database, table: string, fields: Raw, now: number): Model {
-  return db.get<Model>(table).prepareCreate((record) => {
-    record._raw.id = uuidv7(now);
-    setFields(record, { ...fields, user_id: null, created_at: now, updated_at: now, deleted_at: null });
-  });
 }
 
 /** Semeia o catálogo embarcado; idempotente (só cria o que falta, pelo nome). */
@@ -80,7 +63,8 @@ function setFieldsFor(ex: ExerciseDraft): Raw {
 
 /**
  * Cria ou atualiza numa única transação (um db.batch): ou grava tudo, ou nada (RNF-02).
- * Linhas existentes são reaproveitadas por posição; as que sobram viram tombstone.
+ * routine_exercise é reaproveitado por id (R-13), nunca por posição; os que saem viram tombstone.
+ * As séries (routine_set) de cada exercício são reaproveitadas por posição dentro dele.
  * Devolve o id da rotina.
  */
 export async function saveRoutine(db: Database, draft: RoutineDraft): Promise<string> {
@@ -116,9 +100,11 @@ export async function saveRoutine(db: Database, draft: RoutineDraft): Promise<st
       ops.push(routine);
     }
 
+    const kept = new Set<string>();
     draft.exercises.forEach((ex, i) => {
       const fields: Raw = { routine_id: routineId, exercise_id: ex.exerciseId, sort_order: i, rest_seconds: ex.restSeconds };
-      const old = oldExercises[i];
+      const old = ex.routineExerciseId ? oldExercises.find((e) => e.id === ex.routineExerciseId) : undefined;
+      if (old) kept.add(old.id);
       let routineExerciseId: string;
       if (old) {
         routineExerciseId = old.id;
@@ -138,7 +124,7 @@ export async function saveRoutine(db: Database, draft: RoutineDraft): Promise<st
       previous.slice(ex.sets).forEach(tombstone);
     });
 
-    for (const old of oldExercises.slice(draft.exercises.length)) {
+    for (const old of oldExercises.filter((e) => !kept.has(e.id))) {
       tombstone(old);
       oldSets.filter((s) => raw(s).routine_exercise_id === old.id).forEach(tombstone);
     }
@@ -170,6 +156,7 @@ export async function loadRoutine(db: Database, id: string): Promise<RoutineDraf
       const first = own[0] ? raw(own[0]) : {};
       const r = raw(re);
       return {
+        routineExerciseId: re.id,
         exerciseId: String(r.exercise_id),
         sets: own.length,
         weightKg: (first.target_weight_kg as number | null | undefined) ?? null,

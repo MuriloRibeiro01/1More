@@ -19,5 +19,30 @@ export class RoutineSetModel extends Model {
   static table = 'routine_set';
 }
 
+export class WorkoutModel extends Model {
+  static table = 'workout';
+}
+
+export class WorkoutExerciseModel extends Model {
+  static table = 'workout_exercise';
+}
+
+export class WorkoutSetModel extends Model {
+  static table = 'workout_set';
+}
+
+export class ExerciseNoteModel extends Model {
+  static table = 'exercise_note';
+}
+
 /** Classes dos models para o `new Database`. */
-export const modelClasses: (typeof Model)[] = [ExerciseModel, RoutineModel, RoutineExerciseModel, RoutineSetModel];
+export const modelClasses: (typeof Model)[] = [
+  ExerciseModel,
+  RoutineModel,
+  RoutineExerciseModel,
+  RoutineSetModel,
+  WorkoutModel,
+  WorkoutExerciseModel,
+  WorkoutSetModel,
+  ExerciseNoteModel,
+];

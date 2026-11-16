@@ -1,17 +1,16 @@
-import { useState } from 'react';
-import { RoutineEditorScreen } from './RoutineEditorScreen';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../navigation/RootNavigator';
 import { RoutineListScreen } from './RoutineListScreen';
 
-type View = { name: 'list' } | { name: 'editor'; routineId?: string };
-
-/** Aba Treinar: lista de rotinas ⇄ editor. Navegação por estado, sem pilha (a aba não muda, RNF-08). */
+/** Aba Treinar: início. Editar e o treino ativo abrem como telas de fluxo na pilha (sem abas). */
 export function TrainScreen() {
-  const [view, setView] = useState<View>({ name: 'list' });
-
-  if (view.name === 'editor') {
-    return <RoutineEditorScreen routineId={view.routineId} onDone={() => setView({ name: 'list' })} />;
-  }
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   return (
-    <RoutineListScreen onNew={() => setView({ name: 'editor' })} onOpen={(routineId) => setView({ name: 'editor', routineId })} />
+    <RoutineListScreen
+      onNew={() => navigation.navigate('RoutineEditor')}
+      onOpen={(routineId) => navigation.navigate('RoutineEditor', { routineId })}
+      onStart={(workoutId) => navigation.navigate('ActiveWorkout', { workoutId })}
+    />
   );
 }

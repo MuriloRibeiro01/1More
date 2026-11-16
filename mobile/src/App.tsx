@@ -9,7 +9,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { database } from './db';
 import { loadThemePreference, saveThemePreference } from './db/preferences';
 import { seedCatalog } from './routines/repository';
-import { RootTabs } from './navigation/RootTabs';
+import { RootNavigator } from './navigation/RootNavigator';
 import { ThemeProvider, useOneMoreFonts, useTheme, type ThemePreference } from './theme';
 
 void SplashScreen.preventAutoHideAsync();
@@ -40,7 +40,7 @@ function ThemedNavigation() {
   return (
     <NavigationContainer theme={navigationTheme}>
       <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
-      <RootTabs />
+      <RootNavigator />
     </NavigationContainer>
   );
 }
