@@ -2,6 +2,12 @@
 
 O que mudou em cada tarefa, em linguagem de gente. Detalhes técnicos nos guias e em `docs/tasks/`.
 
+## T-006 — Caderno: treino ativo, histórico e progresso · 2026-11-12 (docs: 2026-11-26)
+
+- **Mobile, 100% local:** novo visual de caderno e navegação em pilha sobre as 4 abas. Dá para treinar a partir de uma rotina (série concluída com 1 toque, descanso, retomar treino), ver o resumo, consultar e editar o histórico (inclusive treino passado), acompanhar o progresso (1RM, melhor série, volume) e abrir a tela de cada exercício. Schema WatermelonDB v4.
+- Entrega retroativa: 21 de 46 critérios conferidos no aparelho; o restante (superset, trocar exercício, notificação do descanso, filtros do catálogo etc.) está em aberto em `docs/tasks/T-006-frontend-caderno.md`. Build Android agora exige o plugin `mobile/plugins/withWatermelonBuildConfig.js` e o CMake 3.31.6 (ver `mobile/README.md`).
+- Correções de 2026-11-25 (validação no Pixel_4a): BuildConfig do WatermelonDB e CMake no build Android; `SemanaCaderno` sem `Intl.RelativeTimeFormat` (não existe no Hermes); margem inferior dos botões coberta pela barra de navegação; campo de peso (`0` inicial e dígitos que se substituíam).
+
 ## T-005 — Planilha de treino (rotinas) · 2026-10-18
 
 - **Mobile, 100% local:** na aba Treinar dá para criar, editar e excluir rotinas (exclusão lógica). Os exercícios vêm de um catálogo embarcado com 16 itens e busca que ignora acento. Cada exercício tem 1–10 séries, carga em kg com vírgula, reps mín/máx e descanso de 15 em 15 s.

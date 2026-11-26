@@ -9,11 +9,11 @@
 
 | Item | Versão | Observação |
 |------|--------|------------|
-| Expo SDK | ~57 | managed + **dev client** (`expo-dev-client`); não roda no Expo Go |
-| React Native / React | 0.86.3 / 19.2.3 | |
+| Expo SDK | ~58 | managed + **dev client** (`expo-dev-client`); não roda no Expo Go |
+| React Native / React | 0.88.1 / 19.3.0 | |
 | TypeScript | ~6.0 | `strict: true` |
 | WatermelonDB | 0.28.0 | SQLite com JSI. Plugin de config `@lovesworking/watermelondb-expo-plugin-sdk-52-plus` **1.0.3** (versão exata) no `app.json`; no iOS, `expo-build-properties` adiciona o pod `simdjson` (`ios.extraPods`) |
-| Navegação | `@react-navigation/bottom-tabs` 7 | com `TabBar` próprio |
+| Navegação | `@react-navigation/bottom-tabs` 7 + `native-stack` 7 | abas com `TabBar` próprio; pilha por cima (T-006) |
 | i18n | i18next 26 + react-i18next 17 + `expo-localization` | pt-BR padrão, en |
 | Fontes | `@expo-google-fonts/*` | Racing Sans One, Barlow, Barlow Condensed, IBM Plex Mono |
 | Ícones | `react-native-svg` | pacote oficial de 32 ícones |
@@ -80,6 +80,30 @@ sequenceDiagram
 
 O `Tab.Navigator` usa `tabBar={AppTabBar}`, que renderiza o componente `TabBar` do Design System e emite o
 evento `tabPress` do React Navigation antes de navegar.
+
+## Caderno: telas e módulos (T-006)
+
+Estado detalhado e critérios em [`docs/tasks/T-006-frontend-caderno.md`](../tasks/T-006-frontend-caderno.md). Banco no schema v4.
+
+`src/navigation/RootNavigator.tsx` põe uma pilha sobre as 4 abas (`RootTabs`):
+
+| Rota da pilha | Tela (`src/screens/`) |
+|---------------|-----------------------|
+| `Tabs` | `TrainScreen`, `HistoryScreen`, `ProgressScreen`, `ProfileScreen` |
+| `RoutineEditor` | `RoutineEditorScreen` (lista em `RoutineListScreen`) |
+| `ExercisePicker` | `ExercisePickerScreen` |
+| `ActiveWorkout` | `ActiveWorkoutScreen` |
+| `WorkoutSummary` | `WorkoutSummaryScreen` |
+| `WorkoutDetail` | `WorkoutDetailScreen` (treino passado; `RegistrarPassadoSheet` cria um) |
+| `Exercise` | `ExerciseScreen` |
+
+| Módulo (`src/`) | Papel |
+|-----------------|-------|
+| `workout/` | Regras e persistência do treino: `repository`, `sessions`, `restTimer`, `summary`, `history`, `week`, `queries`, hook `useActiveWorkout` |
+| `routines/` | Rotinas e catálogo embarcado (`catalog`, `repository`, `rules`) |
+| `exercise/` | Recordes, histórico e sugestão de carga por exercício |
+| `progress/` | Séries para o gráfico e séries por músculo na semana |
+| `components/` | Além do DS: componentes do caderno (`Folha`, `Linha`, `Caixinha`, `LivroCaixa`, `SemanaCaderno`, `MesCaderno`, `GraficoCaderno`, `CarimboPR`, `FaixaRetomar`…) |
 
 ## Tema (RF-72)
 
