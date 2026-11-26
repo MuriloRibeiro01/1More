@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { StyleSheet, Text, TextInput, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useEffect, useRef, useState, type ComponentRef } from 'react';
+import { Platform, StyleSheet, Text, TextInput, View, type StyleProp, type ViewStyle } from 'react-native';
 import { border, size as sizes, space, text, useTheme } from '../theme';
 
 export interface NumberFieldProps {
@@ -41,6 +41,10 @@ export function NumberField({
 }: NumberFieldProps) {
   const { colors: c } = useTheme();
   const [focused, setFocused] = useState(false);
+  const inputRef = useRef<ComponentRef<typeof TextInput>>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const length = value === undefined ? 0 : String(value).length;
+  useEffect(() => () => void (timer.current && clearTimeout(timer.current)), []);
 
   return (
     <View style={[styles.root, style]}>
@@ -56,14 +60,23 @@ export function NumberField({
           accessibilityState={{ disabled }}
           editable={!disabled}
           value={value === undefined ? undefined : String(value)}
-          onChangeText={onChange}
           placeholder={placeholder}
           placeholderTextColor={c.inkMuted}
           keyboardType={decimal ? 'decimal-pad' : 'number-pad'}
-          selectTextOnFocus
-          onFocus={() => setFocused(true)}
+          // No Android o ReactEditText re-seleciona tudo a cada eco do valor controlado (o 2º dígito substituía o 1º):
+          // lá a seleção é só o setSelection único do onFocus.
+          selectTextOnFocus={Platform.OS !== 'android'}
+          ref={inputRef}
+          onChangeText={onChange}
+          onFocus={() => {
+            setFocused(true);
+            // selectTextOnFocus sozinho se perde no Android com valor controlado ("0" + digitar = "05").
+            // Seleção NÃO controlada (uma vez, no foco): uma prop `selection` presa fazia o 2º dígito substituir o 1º.
+            if (length > 0) timer.current = setTimeout(() => inputRef.current?.setSelection?.(0, length), 0);
+          }}
           onBlur={() => {
             setFocused(false);
+            if (timer.current) clearTimeout(timer.current);
             onBlur?.();
           }}
           style={[size === 'lg' ? styles.inputLg : styles.inputMd, { color: disabled ? c.inkFaint : muted ? c.inkMuted : c.ink }]}

@@ -215,7 +215,7 @@ export function RoutineEditorScreen({ routineId, onDone }: RoutineEditorScreenPr
   const title = form?.name.trim() || t(routineId ? 'routines.editRoutine' : 'routines.newRoutine');
 
   return (
-    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.root, { backgroundColor: c.paper }]}>
+    <SafeAreaView edges={['top', 'left', 'right', 'bottom']} style={[styles.root, { backgroundColor: c.paper }]}>
       <Folha>
       <TopBar title={title} compact left={<IconButton icon="close" label={t('routines.close')} onPress={close} />} />
       {form ? (

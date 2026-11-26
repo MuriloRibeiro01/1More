@@ -105,7 +105,8 @@ async function lastSessionSets(db: Database, exerciseId: string): Promise<Planne
   const sets = await children(db, 'workout_set', 'workout_exercise_id', [log.id]);
   return sets
     .filter((s) => raw(s).completed_at !== null)
-    .map((s) => ({ type: 'normal', weightKg: num(raw(s).weight_kg), reps: num(raw(s).reps) }));
+    // Carga 0 não é sugestão útil: o campo nasce vazio em vez de pré-preencher "0" (que o dígito seguinte acrescentava).
+    .map((s) => ({ type: 'normal', weightKg: num(raw(s).weight_kg) || null, reps: num(raw(s).reps) }));
 }
 
 /** Séries válidas (RN-08) do exercício em treinos finalizados: a base para detectar PR (RN-11). */

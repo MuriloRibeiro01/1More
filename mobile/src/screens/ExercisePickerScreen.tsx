@@ -29,7 +29,7 @@ export function ExercisePickerScreen({ catalog, onCancel, onConfirm }: ExerciseP
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
   return (
-    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.root, { backgroundColor: c.paper }]}>
+    <SafeAreaView edges={['top', 'left', 'right', 'bottom']} style={[styles.root, { backgroundColor: c.paper }]}>
       <Folha>
         <TopBar title={t('picker.title')} compact left={<IconButton icon="chevron-left" label={t('picker.back')} onPress={onCancel} />} />
         <View style={styles.search}>

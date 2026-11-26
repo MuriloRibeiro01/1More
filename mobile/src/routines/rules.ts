@@ -12,7 +12,8 @@ export const MAX_NAME = 80;
 
 export type ParseKgResult = { ok: true; value: number | null } | { ok: false; error: 'invalid' | 'negative' };
 
-const NUMBER = /^\d+(?:[.,]\d+)?$/;
+// Aceita separador pendente ("120,"): é o que o teclado deixa no meio da digitação e não pode invalidar a série.
+const NUMBER = /^\d+(?:[.,]\d*)?$/;
 
 /** Arredonda para 2 casas sem o erro de ponto flutuante (82,555 → 82,56). */
 export function roundKg(value: number): number {
