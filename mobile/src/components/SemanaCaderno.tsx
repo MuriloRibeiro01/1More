@@ -16,7 +16,8 @@ export function SemanaCaderno({ now, workouts }: SemanaCadernoProps) {
   const start = startOfWeek(now);
   const todayKey = localDayKey(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()), 0);
   const trainedKeys = new Set(workouts.map((w) => localDayKey(w.startedAt, w.tzOffsetMin)));
-  const today = new Intl.RelativeTimeFormat(loc, { numeric: 'auto' }).format(0, 'day');
+  // Hermes não implementa Intl.RelativeTimeFormat: o texto vem do i18n.
+  const today = i18n.t('train.todayLabel');
 
   return (
     <View style={styles.root}>

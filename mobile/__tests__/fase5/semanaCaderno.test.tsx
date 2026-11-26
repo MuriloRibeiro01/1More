@@ -52,6 +52,22 @@ describe('SemanaCaderno', () => {
     expect(dias()[2].props.accessibilityLabel).toBe('quarta-feira, hoje');
   });
 
+  it('funciona no Hermes, que não tem Intl.RelativeTimeFormat (rótulo de hoje vem do i18n)', async () => {
+    const intl = Intl as unknown as Record<string, unknown>;
+    const original = intl.RelativeTimeFormat;
+    delete intl.RelativeTimeFormat;
+    try {
+      await renderComTema(<SemanaCaderno now={quarta} workouts={[]} />);
+      expect(dias()[2].props.accessibilityLabel).toBe('quarta-feira, hoje');
+      await i18n.changeLanguage('en');
+      await renderComTema(<SemanaCaderno now={quarta} workouts={[]} />);
+      expect(screen.getAllByTestId('dia-2').some((d) => /, today$/.test(d.props.accessibilityLabel))).toBe(true);
+    } finally {
+      intl.RelativeTimeFormat = original;
+      await i18n.changeLanguage('pt-BR');
+    }
+  });
+
   it('treino de outra semana ou no domingo anterior não marca nada', async () => {
     await renderComTema(<SemanaCaderno now={quarta} workouts={[treino(8), treino(16)]} />);
     expect(screen.queryByTestId('dia-treinado')).toBeNull();

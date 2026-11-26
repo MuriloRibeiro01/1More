@@ -153,6 +153,7 @@ const ptBR = {
   train: {
     placeholder: 'Caderno novo. Suas rotinas e a semana aparecem aqui.',
     todayRoutine: 'Rotina do dia',
+    todayLabel: 'hoje',
     startWorkout: 'Começar treino',
     freeWorkout: 'Treino livre',
     editRoutines: 'Editar rotinas',

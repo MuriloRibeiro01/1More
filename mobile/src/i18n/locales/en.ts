@@ -155,6 +155,7 @@ const en: Translations = {
   train: {
     placeholder: 'New notebook. Your routines and the week show up here.',
     todayRoutine: 'Today’s routine',
+    todayLabel: 'today',
     startWorkout: 'Start workout',
     freeWorkout: 'Free workout',
     editRoutines: 'Edit routines',
