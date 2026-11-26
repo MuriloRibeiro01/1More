@@ -61,7 +61,9 @@ async function novoTreino(now = Date.now()) {
 
 beforeAll(() => i18n.changeLanguage('pt-BR'));
 // Concluir série inicia o restTimer (setInterval de 250 ms): relógio falso evita tick real competindo com o banco sob carga.
-afterEach(() => jest.useRealTimers());
+afterEach(() => {
+  jest.useRealTimers();
+});
 beforeEach(async () => {
   jest.useFakeTimers({ doNotFake: ['nextTick', 'setImmediate', 'queueMicrotask'] });
   db = criarBancoDeTeste();
