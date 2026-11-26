@@ -4,6 +4,8 @@ Itens priorizados pelo PO (Atlas). A partir do T-002 toda tarefa começa pelos t
 
 > **Plano até o MVP:** ver [`PLANO-MVP.md`](PLANO-MVP.md) (2026-11-25). Ordem: Fase A (guardar a T-006) → B0 (exportação) → T-001b → T-002 → T-003, com o escopo Must correndo ao lado. A base da T-006 é a `develop`; a `backup/t006-local` foi descartada.
 
+> **T-006 (frontend do caderno):** ver [`T-006-frontend-caderno.md`](T-006-frontend-caderno.md) (retroativa, 2026-11-26): 46 critérios do protótipo conferidos contra o app, 21 ok e 25 em aberto (12 lacunas, 11 por verificar, 2 por decidir). Lacunas viram T-006a (treino ativo), T-006b (editor de rotina), T-006c (catálogo) e T-006d (atividades fora da musculação).
+
 ## Próximas tarefas (Fase 0 — Fundação, roadmap em `requisitos.txt`)
 - **T-001b — Migrar backend para Spring Boot 4.0.x** (R-02; primeira tarefa de 2026-10-15, antes do T-002). Java 17 continua sendo a baseline. Manter `./mvnw test` verde, revisão do Leônidas e do Sérgio, ADR-002.
 - **T-002 — Autenticação** (RF-01, RF-05, RNF-11): cadastro/login e-mail+senha, JWT access curto + refresh, tokens no `expo-secure-store`; token expirado pausa só o sync.
