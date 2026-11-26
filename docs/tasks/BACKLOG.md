@@ -2,6 +2,8 @@
 
 Itens priorizados pelo PO (Atlas). A partir do T-002 toda tarefa começa pelos testes de aceite do Dumont (ver TDD no CLAUDE.md).
 
+> **Plano até o MVP:** ver [`PLANO-MVP.md`](PLANO-MVP.md) (2026-11-25). Ordem: Fase A (guardar a T-006) → B0 (exportação) → T-001b → T-002 → T-003, com o escopo Must correndo ao lado. A base da T-006 é a `develop`; a `backup/t006-local` foi descartada.
+
 ## Próximas tarefas (Fase 0 — Fundação, roadmap em `requisitos.txt`)
 - **T-001b — Migrar backend para Spring Boot 4.0.x** (R-02; primeira tarefa de 2026-10-15, antes do T-002). Java 17 continua sendo a baseline. Manter `./mvnw test` verde, revisão do Leônidas e do Sérgio, ADR-002.
 - **T-002 — Autenticação** (RF-01, RF-05, RNF-11): cadastro/login e-mail+senha, JWT access curto + refresh, tokens no `expo-secure-store`; token expirado pausa só o sync.
