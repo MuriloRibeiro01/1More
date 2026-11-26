@@ -4,7 +4,13 @@ Itens priorizados pelo PO (Atlas). A partir do T-002 toda tarefa começa pelos t
 
 > **Plano até o MVP:** ver [`PLANO-MVP.md`](PLANO-MVP.md) (2026-11-25). Ordem: Fase A (guardar a T-006) → B0 (exportação) → T-001b → T-002 → T-003, com o escopo Must correndo ao lado. A base da T-006 é a `develop`; a `backup/t006-local` foi descartada.
 
-> **T-006 (frontend do caderno):** ver [`T-006-frontend-caderno.md`](T-006-frontend-caderno.md) (retroativa, 2026-11-26): 46 critérios do protótipo conferidos contra o app, 21 ok e 25 em aberto (12 lacunas, 11 por verificar, 2 por decidir). Lacunas viram T-006a (treino ativo), T-006b (editor de rotina), T-006c (catálogo) e T-006d (atividades fora da musculação).
+> **T-006 (frontend do caderno) — encerrada com ressalvas em 2026-11-26:** ver [`T-006-frontend-caderno.md`](T-006-frontend-caderno.md) e a matriz [`T-006-matriz-aceite.md`](T-006-matriz-aceite.md). 46 critérios do protótipo, 26 conferidos. O que sobrou virou:
+> - [`T-006a`](T-006a-treino-ativo-lacunas.md) treino ativo (série da vez, trocar exercício, histórico no treino, notificação e tela ligada; dependências novas, Leônidas);
+> - [`T-006b`](T-006b-editor-de-rotina.md) editor de rotina (letra, superset, pastas; superset aguarda decisão);
+> - [`T-006c`](T-006c-catalogo-filtros-e-exercicio-proprio.md) catálogo (filtros e exercício próprio);
+> - [`T-006d`](T-006d-atividades-fora-da-musculacao.md) atividades fora da musculação (aguarda decisão);
+> - [`T-006e`](T-006e-ajustes-das-revisoes.md) ajustes das revisões do Sérgio e do Leônidas (sem decisão pendente, pode começar).
+> A verificação restante (C04, C40, C41, C42) é a Fase 10 do plano (QA), ainda sem tarefa.
 
 ## Próximas tarefas (Fase 0 — Fundação, roadmap em `requisitos.txt`)
 - **T-001b — Migrar backend para Spring Boot 4.0.x** (R-02; primeira tarefa de 2026-10-15, antes do T-002). Java 17 continua sendo a baseline. Manter `./mvnw test` verde, revisão do Leônidas e do Sérgio, ADR-002.
