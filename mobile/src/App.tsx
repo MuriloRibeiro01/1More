@@ -1,4 +1,5 @@
 import './i18n';
+import { purgeExpiredTombstones } from './db/purge';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -58,6 +59,17 @@ export default function App() {
       alive = false;
     };
   }, []);
+
+  // RN-20: expurga tombstones com 30 dias ou mais, DEPOIS da primeira tela (nunca segura a abertura; falha é só log).
+  // T-003: quando houver sync, só expurgar o tombstone depois que o servidor o confirmar (RN-21);
+  // um aparelho offline por 30+ dias não pode perdê-lo antes de propagar.
+  useEffect(() => {
+    if (preference === null) return;
+    const timer = setTimeout(() => {
+      void purgeExpiredTombstones(database).catch((error) => console.error('[db] falha ao expurgar tombstones', error));
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [preference]);
 
   const persistPreference = useCallback((p: ThemePreference) => void saveThemePreference(database, p), []);
 

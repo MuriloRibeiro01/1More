@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { space, text, useTheme } from '../theme';
+import { sizeExtra, space, text, useTheme } from '../theme';
 import { IconButton } from './IconButton';
 
 export interface StepperProps {
@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
   root: { gap: space.s1 },
   label: { ...text.label },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.s2 },
-  value: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'center', gap: space.s1, minWidth: 72 },
+  value: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'center', gap: space.s1, minWidth: sizeExtra.sizeStepperValue },
   number: { ...text.numLg, textAlign: 'center' },
   unit: { ...text.numSm },
 });

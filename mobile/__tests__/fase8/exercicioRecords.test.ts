@@ -48,6 +48,6 @@ describe('exerciseRecords', () => {
   it('carga nula (peso corporal) conta como 0 kg e só aparecem recordes de reps', () => {
     const r = exerciseRecords([sessao('a', 1, [[null, 12]])]);
     expect(r.reps).toMatchObject({ weightKg: 0, reps: 12 });
-    expect(r.weight).toMatchObject({ weightKg: 0 });
+    expect(r.weight).toBeUndefined(); // T-006e/S8: 0 kg não é recorde de carga
   });
 });

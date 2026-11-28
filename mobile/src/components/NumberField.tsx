@@ -18,6 +18,8 @@ export interface NumberFieldProps {
   disabled?: boolean;
   /** Valor a lápis (ink-muted): sugestão ainda não confirmada. */
   muted?: boolean;
+  /** Unidade em tinta (linha da série da vez, sobre a faixa amarela). */
+  unitInk?: boolean;
   /** Ao sair do campo (gravar sem esperar o próximo toque). */
   onBlur?: () => void;
   style?: StyleProp<ViewStyle>;
@@ -36,6 +38,7 @@ export function NumberField({
   decimal = true,
   disabled = false,
   muted = false,
+  unitInk = false,
   onBlur,
   style,
 }: NumberFieldProps) {
@@ -81,7 +84,7 @@ export function NumberField({
           }}
           style={[size === 'lg' ? styles.inputLg : styles.inputMd, { color: disabled ? c.inkFaint : muted ? c.inkMuted : c.ink }]}
         />
-        {unit ? <Text style={[styles.unit, { color: c.inkMuted }]}>{unit}</Text> : null}
+        {unit ? <Text style={[styles.unit, { color: unitInk ? c.ink : c.inkMuted }]}>{unit}</Text> : null}
       </View>
     </View>
   );

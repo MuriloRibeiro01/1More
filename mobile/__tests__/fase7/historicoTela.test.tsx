@@ -177,9 +177,12 @@ describe('visão Lista | Mês', () => {
   });
 
   it('dois treinos no mesmo dia: o toque abre o mais recente e o rótulo lista os dois', async () => {
-    const agora = Date.now();
-    await feito(agora - min(30), 'Manhã');
-    const recente = await feito(agora - min(2), 'Noite');
+    // Âncora fixa no dia (não em Date.now()): perto da meia-noite "agora − 30 min" cai no dia anterior.
+    // Começo do dia local + segundos: sempre no passado e sempre no mesmo dia.
+    const diaLocal = new Date();
+    diaLocal.setHours(0, 0, 0, 0);
+    await feito(diaLocal.getTime() + 5_000, 'Manhã');
+    const recente = await feito(diaLocal.getTime() + 10_000, 'Noite');
     await montar();
     await abrirMes();
     const cel = await screen.findByRole('button', { name: /Manhã.*Noite|Noite.*Manhã/ });

@@ -340,6 +340,69 @@ export async function addExercise(db: Database, workoutId: string, exerciseId: s
   });
 }
 
+/**
+ * C16: troca o exercício. As séries concluídas ficam no exercício antigo; as pendentes (com carga/reps alvo)
+ * passam para uma linha nova do exercício escolhido, logo depois do antigo. Sem concluídas, o antigo vira tombstone.
+ * Uma única transação (RNF-02). Devolve o id da nova linha de `workout_exercise`.
+ */
+export async function swapExercise(
+  db: Database,
+  workoutExerciseId: string,
+  newExerciseId: string,
+  now = Date.now(),
+): Promise<string> {
+  return db.write(async () => {
+    const old = await db.get<Model>('workout_exercise').find(workoutExerciseId);
+    await db.get<Model>('exercise').find(newExerciseId); // falha se não existir no catálogo
+    const workoutId = String(raw(old).workout_id);
+    if (String(raw(old).exercise_id) === newExerciseId) throw new Error('já é este exercício');
+    if (raw(await db.get<Model>('workout').find(workoutId)).status !== 'active') throw new Error('só o treino ativo troca de exercício');
+    // As pendentes passam a valer para o NOVO exercício: sessão anterior dele (por posição; além do que existiu, a última),
+    // nunca a carga e as reps do exercício antigo. Sem sessão anterior, ficam vazias.
+    const previous = await lastSessionSets(db, newExerciseId);
+    const siblings = await children(db, 'workout_exercise', 'workout_id', [workoutId]);
+    const sets = await children(db, 'workout_set', 'workout_exercise_id', [workoutExerciseId]);
+    const pending = sets.filter((s) => raw(s).completed_at === null);
+    const oldOrder = Number(raw(old).sort_order);
+    const created = prepareCreate(
+      db,
+      'workout_exercise',
+      {
+        workout_id: workoutId,
+        exercise_id: newExerciseId,
+        sort_order: oldOrder + 1,
+        superset_group: null,
+        rest_seconds: num(raw(old).rest_seconds) ?? DEFAULT_REST_S,
+        notes: null,
+      },
+      now,
+    );
+    const ops: Model[] = [created];
+    // abre espaço logo depois do antigo
+    siblings
+      .filter((e) => e.id !== old.id && Number(raw(e).sort_order) > oldOrder)
+      .forEach((e) => ops.push(e.prepareUpdate(() => setFields(e, { sort_order: Number(raw(e).sort_order) + 1, updated_at: now }))));
+    pending.forEach((s, i) => {
+      const seed = previous.length ? previous[Math.min(i, previous.length - 1)] : null;
+      ops.push(
+        s.prepareUpdate(() =>
+          setFields(s, {
+            workout_exercise_id: created.id,
+            weight_kg: seed?.weightKg == null ? null : roundKg(seed.weightKg),
+            reps: seed?.reps ?? null,
+            updated_at: now,
+          }),
+        ),
+      );
+    });
+    if (pending.length === sets.length) {
+      ops.push(old.prepareUpdate(() => setFields(old, { deleted_at: now, updated_at: now })));
+    }
+    await db.batch(ops);
+    return created.id;
+  });
+}
+
 /** Tombstone do exercício e de suas séries. */
 export async function removeExercise(db: Database, workoutExerciseId: string, now = Date.now()): Promise<void> {
   await db.write(async () => {
@@ -389,20 +452,26 @@ export async function finishWorkout(
 
     const pending = sets.filter((s) => raw(s).completed_at === null);
     const kept = new Set(sets.map((s) => s.id));
-    if (opts.pending === 'complete') pending.forEach((s) => update(s, { completed_at: now }));
-    if (opts.pending === 'discard') {
-      pending.forEach((s) => {
-        kept.delete(s.id);
-        update(s, { deleted_at: now });
-      });
+    // 'complete': conclui a pendente com reps > 0 (mesma regra do updateSet); a sem reps não pode ficar concluída
+    // nem pendente num treino finalizado: vira tombstone. 'discard': todas as pendentes viram tombstone.
+    const toComplete = opts.pending === 'complete' ? pending.filter((s) => (num(raw(s).reps) ?? 0) > 0) : [];
+    const toTomb = opts.pending === 'discard' ? pending : opts.pending === 'complete' ? pending.filter((s) => !toComplete.includes(s)) : [];
+    toComplete.forEach((s) => update(s, { completed_at: now }));
+    toTomb.forEach((s) => {
+      kept.delete(s.id);
+      update(s, { deleted_at: now });
+    });
+    if (toTomb.length > 0) {
       exercises
         .filter((e) => !sets.some((s) => kept.has(s.id) && raw(s).workout_exercise_id === e.id))
         .forEach((e) => update(e, { deleted_at: now }));
     }
 
-    const completed = sets
-      .filter((s) => kept.has(s.id))
-      .map((s) => (raw(s).completed_at === null ? now : Number(raw(s).completed_at)));
+    // RN-03: `ended_at` é a última série REALMENTE concluída (inclusive as concluídas agora).
+    const completed = [
+      ...sets.filter((s) => kept.has(s.id) && raw(s).completed_at !== null).map((s) => Number(raw(s).completed_at)),
+      ...toComplete.map(() => now),
+    ];
     update(workout, { status: 'finished', ended_at: Math.max(...completed) });
     await applyBatch(db, ops, snapshots);
   });

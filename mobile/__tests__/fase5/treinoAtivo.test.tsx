@@ -273,7 +273,10 @@ describe('finalizar (RN-05, RN-06)', () => {
     expect(await resumo()).toBeOnTheScreen();
     const w = await loadWorkout(db, id);
     expect(w.status).toBe('finished');
-    expect(w.exercises.flatMap((e) => e.sets).every((s) => s.completedAt !== null)).toBe(true);
+    // T-006e/S1: só pendentes com reps > 0 são concluídas (as sem reps seguem pendentes, como em updateSet)
+    const sets = w.exercises.flatMap((e) => e.sets);
+    expect(sets.filter((s) => (s.reps ?? 0) > 0).every((s) => s.completedAt !== null)).toBe(true);
+    expect(sets.filter((s) => !((s.reps ?? 0) > 0)).every((s) => s.completedAt === null)).toBe(true);
   });
 
   it('pendentes: "Descartar pendentes" finaliza só com o que foi feito', async () => {

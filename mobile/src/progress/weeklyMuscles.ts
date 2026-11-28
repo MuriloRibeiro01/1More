@@ -1,17 +1,23 @@
 import { Q, type Database, type Model } from '@nozbe/watermelondb';
 import { active, raw } from '../db/rows';
 import { isValidSet } from '../workout/rules';
+import { inWeek, weekDayKeys } from '../workout/week';
 import type { SetType } from '../workout/types';
 
-const WEEK_MS = 7 * 86_400_000;
+const DAY_MS = 86_400_000;
+const WEEK_MS = 7 * DAY_MS;
 
 /** Séries válidas por músculo primário nos treinos finalizados da semana [weekStart, +7 dias), maior primeiro (RF-45). */
 export async function weeklyMuscleSets(db: Database, weekStart: Date): Promise<{ muscle: string; sets: number }[]> {
-  const from = weekStart.getTime();
-  const workouts = await db
-    .get<Model>('workout')
-    .query(Q.where('status', 'finished'), active, Q.where('started_at', Q.between(from, from + WEEK_MS - 1)))
-    .fetch();
+  // RN-24: a semana é cortada pelo fuso gravado em cada treino. A janela em UTC é larga (±1 dia) e o filtro é exato.
+  const from = weekStart.getTime() - DAY_MS;
+  const week = weekDayKeys(weekStart);
+  const workouts = (
+    await db
+      .get<Model>('workout')
+      .query(Q.where('status', 'finished'), active, Q.where('started_at', Q.between(from, from + WEEK_MS + 2 * DAY_MS - 1)))
+      .fetch()
+  ).filter((w) => inWeek(Number(raw(w).started_at), Number(raw(w).tz_offset_min), week));
   if (workouts.length === 0) return [];
   const exercises = await db.get<Model>('workout_exercise').query(Q.where('workout_id', Q.oneOf(workouts.map((w) => w.id))), active).fetch();
   if (exercises.length === 0) return [];

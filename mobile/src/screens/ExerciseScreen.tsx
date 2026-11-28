@@ -9,6 +9,7 @@ import { exerciseName, exerciseRepRange, getExerciseNote, saveExerciseNote } fro
 import { exerciseRecords, type ExerciseRecord, type ExerciseRecords } from '../exercise/records';
 import { suggestLoad, type LoadSuggestion } from '../exercise/suggestion';
 import { formatNumber, formatWeight } from '../i18n';
+import i18n from '../i18n/instance';
 import { exerciseSessions, type ExerciseSession } from '../workout/sessions';
 import { size, space, text, useTheme } from '../theme';
 
@@ -32,10 +33,12 @@ function diary(session: ExerciseSession): string {
     .join(' · ');
 }
 const day = (ms: number, tz: number) => new Date(ms + tz * 60_000);
+// S11: sempre o idioma do app (não o do aparelho), como as outras telas.
+const appLocale = () => i18n.resolvedLanguage ?? i18n.language ?? 'pt-BR';
 const longDate = (ms: number, tz: number) =>
-  new Intl.DateTimeFormat(undefined, { timeZone: 'UTC', day: 'numeric', month: 'long' }).format(day(ms, tz));
+  new Intl.DateTimeFormat(appLocale(), { timeZone: 'UTC', day: 'numeric', month: 'long' }).format(day(ms, tz));
 const shortMonth = (ms: number, tz: number) =>
-  new Intl.DateTimeFormat(undefined, { timeZone: 'UTC', month: 'short' }).format(day(ms, tz)).replace('.', '');
+  new Intl.DateTimeFormat(appLocale(), { timeZone: 'UTC', month: 'short' }).format(day(ms, tz)).replace('.', '');
 
 /** Tudo sobre um exercício: recordes (RN-11), sugestão de carga (RN-12), sessões anteriores e a nota fixa. */
 export function ExerciseScreen({ exerciseId }: { exerciseId: string }) {

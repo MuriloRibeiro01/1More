@@ -41,14 +41,15 @@ export function finishDecision(exercises: ExerciseLog[]): 'discard_only' | 'ask_
   return feitas < sets.length ? 'ask_pending' : 'finish';
 }
 
-/** RN-06: completa as pendentes com os valores preenchidos ou as descarta. Não muta a entrada. */
+/** RN-06: completa as pendentes com os valores preenchidos ou as descarta. Não muta a entrada.
+ *  Só conclui pendente com reps > 0 (mesma regra do `updateSet`): a sem reps continua pendente. */
 export function resolvePending(exercises: ExerciseLog[], mode: 'complete' | 'discard', now: number): ExerciseLog[] {
   return exercises
     .map((e) => ({
       ...e,
       sets:
         mode === 'complete'
-          ? e.sets.map((s) => (s.completedAt === null ? { ...s, completedAt: now } : { ...s }))
+          ? e.sets.map((s) => (s.completedAt === null && (s.reps ?? 0) > 0 ? { ...s, completedAt: now } : { ...s }))
           : e.sets.filter((s) => s.completedAt !== null).map((s) => ({ ...s })),
     }))
     .filter((e) => e.sets.length > 0);

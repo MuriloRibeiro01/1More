@@ -43,12 +43,13 @@ export function exerciseRecords(sessions: ExerciseSession[]): ExerciseRecords {
   };
 
   return {
-    weight: best((s) => ({ value: s.weightKg, tie: s.reps })),
+    // Carga 0/nula (peso corporal) não vale recorde de carga, 1RM nem volume: só repetições.
+    weight: best((s) => (s.weightKg > 0 ? { value: s.weightKg, tie: s.reps } : null)),
     oneRm: best((s) => {
-      const v = epley1RM(s.weightKg, s.reps);
+      const v = s.weightKg > 0 ? epley1RM(s.weightKg, s.reps) : null;
       return v === null ? null : { value: v, tie: 0 };
     }),
-    setVolume: best((s) => ({ value: roundKg(s.weightKg * s.reps), tie: 0 })),
+    setVolume: best((s) => (s.weightKg > 0 ? { value: roundKg(s.weightKg * s.reps), tie: 0 } : null)),
     reps: best((s) => ({ value: s.reps, tie: s.weightKg })),
   };
 }

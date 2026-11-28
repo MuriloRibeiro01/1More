@@ -5,7 +5,7 @@ import { finishedWorkoutStarts } from './queries';
 import { isValidSet, prsForSet, setVolume, workoutDuration } from './rules';
 import type { PRType, SetLog } from './types';
 import { roundKg } from '../routines/rules';
-import { startOfWeek, daysTrainedInWeek } from './week';
+import { inWeek, localDayKey, weekDayKeys, weekStartOfDayKey } from './week';
 
 // Resumo do treino finalizado (Fase 6): tudo derivado das séries, nada é guardado (RN-16: derivados não sincronizam).
 
@@ -87,7 +87,9 @@ export async function loadSummary(db: Database, workoutId: string): Promise<Load
   for (const ex of workout.exercises) {
     history[ex.exerciseId] = await validSetHistory(db, ex.exerciseId, workoutId, workout.startedAt);
   }
-  const weekStart = startOfWeek(new Date(workout.startedAt));
+  // RN-24: a semana é a do dia local do treino, no fuso gravado nele.
+  const weekStart = weekStartOfDayKey(localDayKey(workout.startedAt, workout.tzOffsetMin));
+  const week = weekDayKeys(weekStart);
   const from = weekStart.getTime() - DAY_MS;
   const starts = await finishedWorkoutStarts(db, from, from + 9 * DAY_MS);
 
@@ -96,7 +98,7 @@ export async function loadSummary(db: Database, workoutId: string): Promise<Load
     name: workout.name,
     startedAt: workout.startedAt,
     notes: workout.notes,
-    weekDays: daysTrainedInWeek(starts.map((s) => s.startedAt), weekStart, workout.tzOffsetMin),
+    weekDays: new Set(starts.filter((s) => inWeek(s.startedAt, s.tzOffsetMin, week)).map((s) => localDayKey(s.startedAt, s.tzOffsetMin))).size,
   };
 }
 
