@@ -48,6 +48,23 @@ nesse XML e extraia em `<SDK>/cmake/3.31.6`. Sem essa pasta o build falha ao pro
 perde); mudanças de build entram por plugin em `plugins/`. **Nunca rode `npx expo prebuild --clean` sem
 avisar o time**: ele apaga `android/` inteiro, inclusive o que estiver só local (chaves, ajustes de teste).
 
+## Módulos nativos de treino: notificação e tela ligada
+
+O app usa `expo-notifications` (aviso local do fim do descanso, `src/workout/restNotification.ts`) e
+`expo-keep-awake` (tela ligada com treino ativo). São **módulos nativos**: depois de `npm install`, rode
+`npx expo prebuild` (sem `--clean`) e `npx expo run:android` para gerar um **novo dev client**; um dev client
+antigo não tem esses módulos.
+
+Regras de segurança (revisão do Leônidas):
+- Só notificação **local**. **Nunca pedir push token** (`getExpoPushTokenAsync` e similares) e **nunca usar `google-services.json`** nem FCM.
+- Texto genérico, sem exercício, carga nem nome do treino. `POST_NOTIFICATIONS` é pedida uma vez por treino; se negada, o treino segue normal.
+- Tela ligada enquanto houver treino ativo, inclusive minimizado (decisão do PO); é liberada ao finalizar, descartar ou desmontar o app.
+
+## Banco local
+
+WatermelonDB no **schema v6** (`src/db/schema.ts`; migrações congeladas em `src/db/migrations.ts`). Toda mudança
+sobe `version` e ganha um passo de migração novo; nunca altere um passo já entregue.
+
 ## Estrutura
 
 | Pasta | O que tem |
@@ -57,7 +74,7 @@ avisar o time**: ele apaga `android/` inteiro, inclusive o que estiver só local
 | `src/navigation` | Abas fixas Treinar · Histórico · Progresso · Perfil (RNF-08) com `TabBar` próprio, e a pilha por cima delas |
 | `src/screens` | Telas |
 | `src/workout`, `src/routines`, `src/exercise`, `src/progress` | Regras e persistência de treino, rotinas, exercício e progresso |
-| `src/db` | WatermelonDB: `schema.ts` (versão 4), `migrations.ts`, modelos, preferências locais |
+| `src/db` | WatermelonDB: `schema.ts` (versão 6), `migrations.ts`, modelos, preferências locais |
 | `src/sync` | Motor de sync (a implementar) |
 | `src/i18n` | i18next, pt-BR (padrão) e en; formatação de números/datas |
 | `plugins` | Config plugins do Expo (ver acima) |

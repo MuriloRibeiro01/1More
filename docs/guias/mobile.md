@@ -83,7 +83,7 @@ evento `tabPress` do React Navigation antes de navegar.
 
 ## Caderno: telas e módulos (T-006)
 
-Estado detalhado e critérios em [`docs/tasks/T-006-frontend-caderno.md`](../tasks/T-006-frontend-caderno.md). Banco no schema v4.
+Estado detalhado e critérios em [`docs/tasks/T-006-frontend-caderno.md`](../tasks/T-006-frontend-caderno.md). Banco no schema v6 (v5: `exercise.is_custom`; v6: `routine_folder` e `routine.folder_id`).
 
 `src/navigation/RootNavigator.tsx` põe uma pilha sobre as 4 abas (`RootTabs`):
 
@@ -97,13 +97,16 @@ Estado detalhado e critérios em [`docs/tasks/T-006-frontend-caderno.md`](../tas
 | `WorkoutDetail` | `WorkoutDetailScreen` (treino passado; `RegistrarPassadoSheet` cria um) |
 | `Exercise` | `ExerciseScreen` |
 
+`ExercisePickerScreen` também serve para trocar exercício; o formulário de exercício próprio é `ExerciseFormView`. Com treino ativo, `expo-keep-awake` é acionado em `RootNavigator.tsx`.
+
 | Módulo (`src/`) | Papel |
 |-----------------|-------|
-| `workout/` | Regras e persistência do treino: `repository`, `sessions`, `restTimer`, `summary`, `history`, `week`, `queries`, hook `useActiveWorkout` |
-| `routines/` | Rotinas e catálogo embarcado (`catalog`, `repository`, `rules`) |
+| `workout/` | Regras e persistência do treino: `repository` (inclui `swapExercise`), `sessions`, `restTimer`, `restNotification` (notificação local do descanso), `summary`, `history`, `week`, `queries`, hook `useActiveWorkout` |
+| `routines/` | Rotinas, pastas e catálogo (`catalog`, `repository`, `rules`, `folders`, `customExercise` para exercício próprio) |
 | `exercise/` | Recordes, histórico e sugestão de carga por exercício |
+| `db/purge.ts` | Expurgo de tombstones com 30 dias ou mais (RN-20); regra muda com o sync (T-003) |
 | `progress/` | Séries para o gráfico e séries por músculo na semana |
-| `components/` | Além do DS: componentes do caderno (`Folha`, `Linha`, `Caixinha`, `LivroCaixa`, `SemanaCaderno`, `MesCaderno`, `GraficoCaderno`, `CarimboPR`, `FaixaRetomar`…) |
+| `components/` | Além do DS: componentes do caderno (`FaixaFiltros`, `Folha`, `Linha`, `Caixinha`, `LivroCaixa`, `SemanaCaderno`, `MesCaderno`, `GraficoCaderno`, `CarimboPR`, `FaixaRetomar`…) |
 
 ## Tema (RF-72)
 
