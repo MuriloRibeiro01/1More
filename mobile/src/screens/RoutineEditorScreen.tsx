@@ -6,7 +6,9 @@ import { useTranslation } from 'react-i18next';
 import { useDatabase } from '@nozbe/watermelondb/react';
 import { Button, Folha, Icon, IconButton, Linha, NumberField, Sheet, Stepper, TextField, TopBar } from '../components';
 import { formatKgInput, formatWeight } from '../i18n';
-import { deleteRoutine, listCatalog, loadRoutine, RoutineValidationError, saveRoutine } from '../routines/repository';
+import { archiveCustomExercise, saveCustomExercise } from '../routines/customExercise';
+import { listFolders, type RoutineFolder } from '../routines/folders';
+import { deleteRoutine, exerciseNamesByIds, listCatalog, listRoutines, loadRoutine, RoutineValidationError, saveRoutine } from '../routines/repository';
 import {
   DEFAULT_REST_S,
   DEFAULT_SETS,
@@ -90,7 +92,14 @@ export function RoutineEditorScreen({ routineId, onDone }: RoutineEditorScreenPr
   const [saveFailed, setSaveFailed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [picking, setPicking] = useState(false);
-  const [sheet, setSheet] = useState<'discard' | 'delete' | null>(null);
+  const [sheet, setSheet] = useState<'discard' | 'delete' | 'folder' | null>(null);
+  const [folders, setFolders] = useState<RoutineFolder[]>([]);
+  const [folderId, setFolderId] = useState<string | null>(null);
+  const [initialFolderId, setInitialFolderId] = useState<string | null>(null);
+  /** Posição da rotina entre as ativas: a mesma letra da lista (A, B, C…); rotina nova = próxima livre. */
+  const [letterIndex, setLetterIndex] = useState(0);
+
+  const reloadCatalog = useCallback(async () => setCatalog(await listCatalog(db)), [db]);
 
   useEffect(() => {
     let alive = true;
@@ -98,9 +107,20 @@ export function RoutineEditorScreen({ routineId, onDone }: RoutineEditorScreenPr
       const list = await listCatalog(db);
       if (!alive) return;
       setCatalog(list);
+      const [folderList, routines] = await Promise.all([listFolders(db), listRoutines(db)]);
+      if (!alive) return;
+      setFolders(folderList);
+      const position = routines.findIndex((r) => r.id === routineId);
+      setLetterIndex(position >= 0 ? position : routines.length);
       if (!routineId) return;
       const draft = await loadRoutine(db, routineId);
+      const known = draft.folderId && folderList.some((f) => f.id === draft.folderId) ? draft.folderId : null;
+      setFolderId(known);
+      setInitialFolderId(known);
+      // O catálogo só tem exercícios ativos; um arquivado que já está na rotina continua com o nome dele.
       const names = new Map(list.map((e) => [e.id, e.name]));
+      const missing = draft.exercises.map((ex) => ex.exerciseId).filter((id) => !names.has(id));
+      for (const [id, name] of await exerciseNamesByIds(db, missing)) names.set(id, name);
       const loaded: Form = {
         name: draft.name,
         items: draft.exercises.map((ex) => ({
@@ -125,7 +145,7 @@ export function RoutineEditorScreen({ routineId, onDone }: RoutineEditorScreenPr
     };
   }, [db, routineId]);
 
-  const dirty = form !== null && snapshot(form) !== initial;
+  const dirty = form !== null && (snapshot(form) !== initial || folderId !== initialFolderId);
 
   const close = useCallback(() => {
     if (dirty) setSheet('discard');
@@ -177,7 +197,8 @@ export function RoutineEditorScreen({ routineId, onDone }: RoutineEditorScreenPr
 
   const save = async () => {
     if (!form || saving) return;
-    const { draft, parseErrors } = toDraft(form, routineId);
+    const { draft: base, parseErrors } = toDraft(form, routineId);
+    const draft = { ...base, folderId };
     const all = [...new Set([...validateRoutine(draft), ...parseErrors])];
     setErrors(all);
     setSaveFailed(false);
@@ -209,8 +230,25 @@ export function RoutineEditorScreen({ routineId, onDone }: RoutineEditorScreenPr
   };
 
   if (picking) {
-    return <ExercisePickerScreen catalog={catalog} onCancel={() => setPicking(false)} onConfirm={addExercises} />;
+    return (
+      <ExercisePickerScreen
+        catalog={catalog}
+        onCancel={() => setPicking(false)}
+        onConfirm={addExercises}
+        onSaveCustom={async (values, id) => {
+          await saveCustomExercise(db, values, id);
+          await reloadCatalog();
+        }}
+        onArchiveCustom={async (id) => {
+          await archiveCustomExercise(db, id); // o seletor mostra o aviso se falhar
+          await reloadCatalog();
+        }}
+      />
+    );
   }
+
+  const letter = String.fromCharCode(65 + (letterIndex % 26));
+  const folderName = folders.find((f) => f.id === folderId)?.name ?? t('routines.noFolder');
 
   const title = form?.name.trim() || t(routineId ? 'routines.editRoutine' : 'routines.newRoutine');
 
@@ -220,15 +258,25 @@ export function RoutineEditorScreen({ routineId, onDone }: RoutineEditorScreenPr
       <TopBar title={title} compact left={<IconButton icon="close" label={t('routines.close')} onPress={close} />} />
       {form ? (
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <TextField
-            style={styles.gutter}
-            label={t('routines.name')}
-            value={form.name}
-            onChange={(name) => setForm((f) => f && { ...f, name })}
-            placeholder={t('routines.namePlaceholder')}
-            hint={t('routines.nameHint')}
-            maxLength={MAX_NAME}
-          />
+          <Linha
+            margem={
+              <Text accessibilityLabel={t('routines.letter', { letter })} style={[styles.letter, { color: c.ink }]}>
+                {letter}
+              </Text>
+            }
+          >
+            <TextField
+              label={t('routines.name')}
+              value={form.name}
+              onChange={(name) => setForm((f) => f && { ...f, name })}
+              placeholder={t('routines.namePlaceholder')}
+              hint={t('routines.nameHint')}
+              maxLength={MAX_NAME}
+            />
+          </Linha>
+          <Button variant="secondary" style={styles.gutter} onPress={() => setSheet('folder')}>
+            {t('routines.folderButton', { name: folderName })}
+          </Button>
 
           <Text style={[styles.section, styles.gutter, { color: c.inkMuted }]}>{t('routines.exercises')}</Text>
           {form.items.map((item, index) => (
@@ -274,6 +322,29 @@ export function RoutineEditorScreen({ routineId, onDone }: RoutineEditorScreenPr
         <Button variant="danger" block onPress={onDone}>
           {t('routines.discard')}
         </Button>
+      </Sheet>
+      <Sheet open={sheet === 'folder'} title={t('routines.folderChoose')} onClose={() => setSheet(null)}>
+        <Button
+          block
+          onPress={() => {
+            setFolderId(null);
+            setSheet(null);
+          }}
+        >
+          {t('routines.noFolder')}
+        </Button>
+        {folders.map((f) => (
+          <Button
+            key={f.id}
+            block
+            onPress={() => {
+              setFolderId(f.id);
+              setSheet(null);
+            }}
+          >
+            {f.name}
+          </Button>
+        ))}
       </Sheet>
       <Sheet open={sheet === 'delete'} title={t('routines.deleteTitle')} onClose={() => setSheet(null)}>
         <Button block onPress={() => setSheet(null)}>
@@ -402,6 +473,7 @@ const styles = StyleSheet.create({
   content: { paddingTop: space.s5, paddingBottom: space.s8, gap: space.s5 },
   // Texto livre fica à direita da linha de margem (44px + 2px).
   gutter: { paddingLeft: sizes.sizeMargin + space.s3, paddingRight: space.s4 },
+  letter: { ...text.titleMd },
   section: { ...text.label },
   number: { ...text.numMd },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: space.s2 },

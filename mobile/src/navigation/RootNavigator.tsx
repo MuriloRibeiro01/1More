@@ -1,11 +1,16 @@
 import { createNativeStackNavigator, type NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import { useDatabase } from '@nozbe/watermelondb/react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ExercisePickerScreen } from '../screens/ExercisePickerScreen';
+import { archiveCustomExercise, saveCustomExercise } from '../routines/customExercise';
 import { listCatalog } from '../routines/repository';
 import type { CatalogExercise } from '../routines/types';
-import { addExercise } from '../workout/repository';
+import { useKeepAwake } from 'expo-keep-awake';
+import { useTranslation } from 'react-i18next';
+import { RestTimerProvider } from '../workout/RestTimerProvider';
+import { useActiveWorkout } from '../workout/useActiveWorkout';
+import { addExercise, swapExercise } from '../workout/repository';
 import { ExerciseScreen } from '../screens/ExerciseScreen';
 import { WorkoutDetailScreen } from '../screens/WorkoutDetailScreen';
 import { WorkoutSummaryScreen } from '../screens/WorkoutSummaryScreen';
@@ -20,7 +25,7 @@ export type RootStackParamList = {
   /** Treino ativo: tela de fluxo, sem abas (Fase 5). */
   ActiveWorkout: { workoutId: string };
   /** Catálogo para acrescentar exercícios ao treino ativo. */
-  ExercisePicker: { workoutId: string };
+  ExercisePicker: { workoutId: string; /** Troca este exercício do treino (seleção única) em vez de acrescentar. */ replaceWorkoutExerciseId?: string };
   /** Treino finalizado (resumo): substitui o treino ativo na pilha. */
   WorkoutSummary: { workoutId: string };
   /** Treino passado (Histórico). `edit` abre já editável; `isNew` = recém-registrado (sai vazio → descarta). */
@@ -52,27 +57,54 @@ export function ExerciseRoute({ route }: NativeStackScreenProps<RootStackParamLi
 }
 
 export function ExercisePickerRoute({ route, navigation }: NativeStackScreenProps<RootStackParamList, 'ExercisePicker'>) {
+  const { t } = useTranslation();
   const db = useDatabase();
   const [catalog, setCatalog] = useState<CatalogExercise[]>([]);
+  const [failed, setFailed] = useState(false);
+  const alive = useRef(true);
+  const reload = useCallback(
+    () =>
+      listCatalog(db)
+        .then((list) => {
+          if (alive.current) setCatalog(list);
+        })
+        .catch((error) => console.error('[treino] falha ao ler o catálogo', error)),
+    [db],
+  );
   useEffect(() => {
-    let alive = true;
-    listCatalog(db)
-      .then((list) => alive && setCatalog(list))
-      .catch((error) => console.error('[treino] falha ao ler o catálogo', error));
+    alive.current = true;
+    void reload();
     return () => {
-      alive = false;
+      alive.current = false;
     };
-  }, [db]);
+  }, [reload]);
 
   return (
     <ExercisePickerScreen
       catalog={catalog}
       onCancel={navigation.goBack}
+      onSaveCustom={async (values, id) => {
+        await saveCustomExercise(db, values, id);
+        await reload();
+      }}
+      onArchiveCustom={async (id) => {
+        await archiveCustomExercise(db, id); // a tela mostra o aviso se falhar
+        await reload();
+      }}
+      single={!!route.params.replaceWorkoutExerciseId}
+      title={route.params.replaceWorkoutExerciseId ? t('workout.swapExercise') : undefined}
+      error={failed ? t('picker.saveFailed') : null}
       onConfirm={async (ids) => {
+        setFailed(false);
         try {
-          for (const id of ids) await addExercise(db, route.params.workoutId, id);
+          const replace = route.params.replaceWorkoutExerciseId;
+          if (replace) await swapExercise(db, replace, ids[0]);
+          else for (const id of ids) await addExercise(db, route.params.workoutId, id);
         } catch (error) {
-          console.error('[treino] falha ao adicionar exercícios', error);
+          // Não volta ao treino como se tivesse dado certo: o erro fica à vista e o treino fica como estava.
+          console.error('[treino] falha ao gravar a escolha de exercícios', error);
+          setFailed(true);
+          return;
         }
         navigation.goBack();
       }}
@@ -80,9 +112,23 @@ export function ExercisePickerRoute({ route, navigation }: NativeStackScreenProp
   );
 }
 
+/** Mantém a tela ligada (sem permissão, sem rede) enquanto o treino ativo existir. */
+function KeepAwakeNoTreino() {
+  useKeepAwake('treino-ativo');
+  return null;
+}
+
+/** C19: ligada com treino ativo, inclusive minimizado; libera ao finalizar, descartar ou desmontar. */
+function TelaLigadaComTreino() {
+  const active = useActiveWorkout(useDatabase());
+  return active ? <KeepAwakeNoTreino /> : null;
+}
+
 export function RootNavigator() {
   return (
-    <Stack.Navigator initialRouteName="Tabs" screenOptions={{ headerShown: false }}>
+    <RestTimerProvider>
+      <TelaLigadaComTreino />
+      <Stack.Navigator initialRouteName="Tabs" screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Tabs" component={RootTabs} />
       <Stack.Screen name="RoutineEditor" component={RoutineEditorRoute} />
       <Stack.Screen name="ActiveWorkout" component={ActiveWorkoutRoute} />
@@ -90,6 +136,7 @@ export function RootNavigator() {
       <Stack.Screen name="WorkoutSummary" component={WorkoutSummaryRoute} />
       <Stack.Screen name="WorkoutDetail" component={WorkoutDetailRoute} />
       <Stack.Screen name="Exercise" component={ExerciseRoute} />
-    </Stack.Navigator>
+      </Stack.Navigator>
+    </RestTimerProvider>
   );
 }

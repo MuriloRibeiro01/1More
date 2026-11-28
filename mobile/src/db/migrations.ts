@@ -1,4 +1,4 @@
-import { createTable, schemaMigrations } from '@nozbe/watermelondb/Schema/migrations';
+import { addColumns, createTable, schemaMigrations } from '@nozbe/watermelondb/Schema/migrations';
 import type { ColumnSchema } from '@nozbe/watermelondb';
 
 // Migrações do banco local. Nunca altere um passo já publicado: adicione um novo
@@ -17,6 +17,15 @@ const syncColumnsV2: ColumnSchema[] = [
 
 // v3 (Fase 4): mesmas colunas de sync (idênticas às da v2 por enquanto, mas congeladas à parte).
 const syncColumnsV3: ColumnSchema[] = [
+  { name: 'user_id', type: 'string', isOptional: true, isIndexed: true },
+  { name: 'created_at', type: 'number' },
+  { name: 'updated_at', type: 'number' },
+  { name: 'server_version', type: 'number', isOptional: true },
+  { name: 'deleted_at', type: 'number', isOptional: true },
+];
+
+// v6 (T-006b): colunas de sync congeladas à parte.
+const syncColumnsV6: ColumnSchema[] = [
   { name: 'user_id', type: 'string', isOptional: true, isIndexed: true },
   { name: 'created_at', type: 'number' },
   { name: 'updated_at', type: 'number' },
@@ -139,6 +148,26 @@ export const migrations = schemaMigrations({
             ...syncColumnsV4,
           ],
         }),
+      ],
+    },
+    {
+      // T-006c: exercício criado pela pessoa (RF-12). As linhas do catálogo embarcado valem false.
+      toVersion: 5,
+      steps: [addColumns({ table: 'exercise', columns: [{ name: 'is_custom', type: 'boolean' }] })],
+    },
+    {
+      // T-006b: pastas de rotinas (RF-24). A rotina aponta para a pasta; sem pasta = folder_id nulo.
+      toVersion: 6,
+      steps: [
+        createTable({
+          name: 'routine_folder',
+          columns: [
+            { name: 'name', type: 'string' },
+            { name: 'sort_order', type: 'number' },
+            ...syncColumnsV6,
+          ],
+        }),
+        addColumns({ table: 'routine', columns: [{ name: 'folder_id', type: 'string', isOptional: true, isIndexed: true }] }),
       ],
     },
   ],

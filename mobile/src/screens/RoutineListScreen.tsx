@@ -4,8 +4,18 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
 import { useDatabase } from '@nozbe/watermelondb/react';
-import { Button, EmptyState, Folha, Linha, LinkCaneta, SemanaCaderno, Titulo, TopBar } from '../components';
+import { Button, EmptyState, Folha, IconButton, Linha, LinkCaneta, SemanaCaderno, Sheet, TextField, Titulo, TopBar } from '../components';
 import { formatKickerDate } from '../i18n';
+import {
+  FolderValidationError,
+  MAX_FOLDER_NAME,
+  createFolder,
+  deleteFolder,
+  listFolders,
+  renameFolder,
+  routineFolderIds,
+  type RoutineFolder,
+} from '../routines/folders';
 import { finishedWorkoutStarts, listRoutinesWithLastDone, type RoutineWithLastDone } from '../workout/queries';
 import { ActiveWorkoutError, startWorkout } from '../workout/repository';
 import { pickTodayRoutine } from '../workout/rules';
@@ -24,7 +34,9 @@ const DAY_MS = 86_400_000;
 /** A, B, C… na margem; passa de Z volta a A (o MVP não tem tantas rotinas). */
 const letra = (i: number) => String.fromCharCode(65 + (i % 26));
 
-/** Aba Treinar (início): semana, rotina do dia com o único botão cheio, demais rotinas e atalhos. */
+type FolderSheet = null | { kind: 'new' | 'options' | 'rename' | 'delete'; id?: string };
+
+/** Aba Treinar (início): semana, rotina do dia com o único botão cheio, demais rotinas, pastas e atalhos. */
 export function RoutineListScreen({ onNew, onOpen, onStart }: RoutineListScreenProps) {
   const { t } = useTranslation();
   const { colors: c } = useTheme();
@@ -33,26 +45,45 @@ export function RoutineListScreen({ onNew, onOpen, onStart }: RoutineListScreenP
   const [week, setWeek] = useState<{ startedAt: number; tzOffsetMin: number }[]>([]);
   const [editing, setEditing] = useState(false);
   const [startFailed, setStartFailed] = useState(false);
+  const [folders, setFolders] = useState<RoutineFolder[]>([]);
+  const [folderOf, setFolderOf] = useState<Map<string, string | null>>(new Map());
+  const [folderSheet, setFolderSheet] = useState<FolderSheet>(null);
+  const [folderText, setFolderText] = useState('');
+  const [folderError, setFolderError] = useState<string | null>(null);
+
+  const load = useCallback(
+    (isAlive: () => boolean = () => true) => {
+      const from = startOfWeek(new Date()).getTime() - DAY_MS;
+      return Promise.all([
+        listRoutinesWithLastDone(db),
+        finishedWorkoutStarts(db, from, from + 9 * DAY_MS),
+        listFolders(db),
+        routineFolderIds(db),
+      ])
+        .then(([list, starts, folderList, folderIds]) => {
+          if (!isAlive()) return;
+          setRoutines(list);
+          setWeek(starts);
+          setFolders(folderList);
+          setFolderOf(folderIds);
+        })
+        .catch((error) => {
+          console.error('[rotinas] falha ao ler o banco local', error);
+          if (isAlive()) setRoutines([]);
+        });
+    },
+    [db],
+  );
 
   // A aba fica montada por baixo das telas de fluxo: recarrega sempre que volta ao foco.
   useFocusEffect(
     useCallback(() => {
       let alive = true;
-      const from = startOfWeek(new Date()).getTime() - DAY_MS;
-      Promise.all([listRoutinesWithLastDone(db), finishedWorkoutStarts(db, from, from + 9 * DAY_MS)])
-        .then(([list, starts]) => {
-          if (!alive) return;
-          setRoutines(list);
-          setWeek(starts);
-        })
-        .catch((error) => {
-          console.error('[rotinas] falha ao ler o banco local', error);
-          if (alive) setRoutines([]);
-        });
+      void load(() => alive);
       return () => {
         alive = false;
       };
-    }, [db]),
+    }, [load]),
   );
 
   const start = async (opts: { routineId?: string; name?: string }) => {
@@ -67,9 +98,62 @@ export function RoutineListScreen({ onNew, onOpen, onStart }: RoutineListScreenP
   };
   const startFree = () => start({ name: t('train.freeWorkout') });
 
+  const closeFolderSheet = () => {
+    setFolderSheet(null);
+    setFolderError(null);
+  };
+  const saveFolder = async () => {
+    try {
+      if (folderSheet?.kind === 'rename' && folderSheet.id) await renameFolder(db, folderSheet.id, folderText);
+      else await createFolder(db, folderText);
+      closeFolderSheet();
+      await load();
+    } catch (error) {
+      if (error instanceof FolderValidationError) {
+        setFolderError(t(error.reason === 'duplicate' ? 'routines.folderDuplicate' : 'routines.folderEmpty'));
+      } else {
+        console.error('[rotinas] falha ao salvar a pasta', error);
+        setFolderError(t('routines.saveFailed'));
+      }
+    }
+  };
+  const removeFolder = async (id: string) => {
+    closeFolderSheet();
+    try {
+      await deleteFolder(db, id);
+    } catch (error) {
+      console.error('[rotinas] falha ao excluir a pasta', error);
+    }
+    await load();
+  };
+  const sheetFolder = folderSheet?.id ? folders.find((f) => f.id === folderSheet.id) : undefined;
+
   const todayId = editing || !routines ? null : pickTodayRoutine(routines);
   const today = routines?.find((r) => r.id === todayId);
   const rows = (routines ?? []).filter((r) => r.id !== todayId);
+  const unfiled = rows.filter((r) => !folderOf.get(r.id));
+
+  const routineRow = (r: RoutineWithLastDone) => {
+    const list = r.exerciseNames.join(' · ');
+    return (
+      <Linha
+        key={r.id}
+        margem={<Text style={[styles.letra, { color: c.ink }]}>{letra(r.order)}</Text>}
+        accessibilityLabel={[r.name, list].filter(Boolean).join('. ')}
+        accessibilityHint={editing ? t('routines.openHint') : undefined}
+        onPress={() => (editing ? onOpen(r.id) : start({ routineId: r.id }))}
+      >
+        <Text style={[styles.nome, { color: c.ink }]} numberOfLines={1}>
+          {r.name}
+        </Text>
+        {list ? (
+          <Text style={[styles.exercicios, { color: c.inkMuted }]} numberOfLines={1}>
+            {list}
+          </Text>
+        ) : null}
+      </Linha>
+    );
+  };
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={[styles.root, { backgroundColor: c.paper }]}>
@@ -107,29 +191,41 @@ export function RoutineListScreen({ onNew, onOpen, onStart }: RoutineListScreenP
                 </View>
               ) : null}
               {rows.length ? <Text style={[styles.kicker, styles.gutter, { color: c.inkMuted }]}>{t('train.otherRoutines')}</Text> : null}
-              {rows.map((r) => {
-                const list = r.exerciseNames.join(' · ');
+              {unfiled.map(routineRow)}
+              {folders.map((f) => {
+                const inside = rows.filter((r) => folderOf.get(r.id) === f.id);
+                if (!editing && inside.length === 0) return null;
                 return (
-                  <Linha
-                    key={r.id}
-                    margem={<Text style={[styles.letra, { color: c.ink }]}>{letra(r.order)}</Text>}
-                    accessibilityLabel={[r.name, list].filter(Boolean).join('. ')}
-                    accessibilityHint={editing ? t('routines.openHint') : undefined}
-                    onPress={() => (editing ? onOpen(r.id) : start({ routineId: r.id }))}
-                  >
-                    <Text style={[styles.nome, { color: c.ink }]} numberOfLines={1}>
-                      {r.name}
-                    </Text>
-                    {list ? (
-                      <Text style={[styles.exercicios, { color: c.inkMuted }]} numberOfLines={1}>
-                        {list}
+                  <View key={f.id}>
+                    <View style={[styles.gutter, styles.folderHeader]}>
+                      <Text accessibilityRole="header" style={[styles.kicker, styles.folderName, { color: c.inkMuted }]}>
+                        {f.name}
                       </Text>
-                    ) : null}
-                  </Linha>
+                      {editing ? (
+                        <IconButton
+                          icon="more"
+                          label={t('routines.folderOptions', { name: f.name })}
+                          onPress={() => setFolderSheet({ kind: 'options', id: f.id })}
+                        />
+                      ) : null}
+                    </View>
+                    {inside.map(routineRow)}
+                  </View>
                 );
               })}
               <View style={styles.gutter}>
                 <LinkCaneta onPress={onNew}>{t('routines.newRoutine')}</LinkCaneta>
+                {editing ? (
+                  <LinkCaneta
+                    onPress={() => {
+                      setFolderText('');
+                      setFolderError(null);
+                      setFolderSheet({ kind: 'new' });
+                    }}
+                  >
+                    {t('routines.newFolder')}
+                  </LinkCaneta>
+                ) : null}
                 <LinkCaneta onPress={() => setEditing((e) => !e)}>{t(editing ? 'train.doneEditing' : 'train.editRoutines')}</LinkCaneta>
                 {editing ? null : <LinkCaneta onPress={startFree}>{t('train.freeWorkout')}</LinkCaneta>}
               </View>
@@ -142,6 +238,47 @@ export function RoutineListScreen({ onNew, onOpen, onStart }: RoutineListScreenP
           ) : null}
         </ScrollView>
       </Folha>
+
+      <Sheet
+        open={folderSheet?.kind === 'new' || folderSheet?.kind === 'rename'}
+        title={t(folderSheet?.kind === 'rename' ? 'routines.renameFolder' : 'routines.newFolder')}
+        onClose={closeFolderSheet}
+      >
+        <TextField label={t('routines.folderName')} value={folderText} onChange={setFolderText} maxLength={MAX_FOLDER_NAME} />
+        {folderError ? (
+          <Text accessibilityRole="alert" style={[styles.erro, { color: c.ink }]}>
+            {folderError}
+          </Text>
+        ) : null}
+        <Button variant="primary" block onPress={() => void saveFolder()}>
+          {t(folderSheet?.kind === 'rename' ? 'routines.saveFolder' : 'routines.createFolder')}
+        </Button>
+      </Sheet>
+      <Sheet open={folderSheet?.kind === 'options' && !!sheetFolder} title={sheetFolder?.name} onClose={closeFolderSheet}>
+        <Button
+          block
+          onPress={() => {
+            if (!sheetFolder) return;
+            setFolderText(sheetFolder.name);
+            setFolderError(null);
+            setFolderSheet({ kind: 'rename', id: sheetFolder.id });
+          }}
+        >
+          {t('routines.renameFolder')}
+        </Button>
+        <Button variant="danger" block onPress={() => sheetFolder && setFolderSheet({ kind: 'delete', id: sheetFolder.id })}>
+          {t('routines.deleteFolder')}
+        </Button>
+      </Sheet>
+      <Sheet open={folderSheet?.kind === 'delete' && !!sheetFolder} title={t('routines.deleteFolderTitle')} onClose={closeFolderSheet}>
+        <Text style={[styles.exercicios, { color: c.inkMuted }]}>{t('routines.deleteFolderHint')}</Text>
+        <Button variant="danger" block onPress={() => sheetFolder && void removeFolder(sheetFolder.id)}>
+          {t('routines.delete')}
+        </Button>
+        <Button block onPress={closeFolderSheet}>
+          {t('routines.folderCancel')}
+        </Button>
+      </Sheet>
     </SafeAreaView>
   );
 }
@@ -156,5 +293,7 @@ const styles = StyleSheet.create({
   letra: { ...text.titleMd },
   nome: { ...text.bodyStrong },
   exercicios: { ...text.caption },
+  folderHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  folderName: { flex: 1, paddingTop: space.s4 },
   erro: { ...text.body, paddingTop: space.s3 },
 });

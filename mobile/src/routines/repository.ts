@@ -30,6 +30,7 @@ export async function seedCatalog(db: Database): Promise<void> {
           primary_muscle: s.primaryMuscle,
           secondary_muscles: JSON.stringify(s.secondaryMuscles),
           equipment_code: s.equipment,
+          is_custom: false,
         },
         now,
       ),
@@ -42,7 +43,14 @@ export async function seedCatalog(db: Database): Promise<void> {
 export async function listCatalog(db: Database): Promise<CatalogExercise[]> {
   const rows = await db.get<Model>('exercise').query(Q.where('user_id', null), active).fetch();
   return rows
-    .map((e) => ({ id: e.id, name: String(raw(e).name) }))
+    .map((e) => ({
+      id: e.id,
+      name: String(raw(e).name),
+      primaryMuscle: (raw(e).primary_muscle as string | null) ?? null,
+      equipmentCode: (raw(e).equipment_code as string | null) ?? null,
+      trackingType: String(raw(e).tracking_type),
+      isCustom: raw(e).is_custom === true,
+    }))
     .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
 }
 
@@ -73,8 +81,18 @@ export async function saveRoutine(db: Database, draft: RoutineDraft): Promise<st
 
   return db.write(async () => {
     const exerciseIds = [...new Set(draft.exercises.map((e) => e.exerciseId))];
-    const found = await db.get<Model>('exercise').query(Q.where('id', Q.oneOf(exerciseIds)), active).fetchCount();
-    if (found !== exerciseIds.length) throw new Error('exercício não encontrado no catálogo');
+    // Exercício arquivado (exercício próprio, RF-12) continua valendo na rotina que JÁ o tem; novo na rotina, só ativo.
+    const already = draft.id
+      ? new Set((await activeChildren(db, 'routine_exercise', 'routine_id', [draft.id])).map((re) => String(raw(re).exercise_id)))
+      : new Set<string>();
+    const found = await db.get<Model>('exercise').query(Q.where('id', Q.oneOf(exerciseIds)), active).fetch();
+    const activeIds = new Set(found.map((e) => e.id));
+    const inactive = exerciseIds.filter((id) => !activeIds.has(id));
+    // Os que não estão ativos só passam se já estavam na rotina (e ainda existem, arquivados).
+    const archivedKept = inactive.length ? await db.get<Model>('exercise').query(Q.where('id', Q.oneOf(inactive))).fetchCount() : 0;
+    if (inactive.some((id) => !already.has(id)) || archivedKept !== inactive.length) {
+      throw new Error('exercício não encontrado no catálogo');
+    }
 
     const now = Date.now();
     const ops: Model[] = [];
@@ -91,11 +109,11 @@ export async function saveRoutine(db: Database, draft: RoutineDraft): Promise<st
     if (draft.id) {
       const routine = await db.get<Model>('routine').find(draft.id);
       routineId = routine.id;
-      update(routine, { name: draft.name.trim() });
+      update(routine, draft.folderId === undefined ? { name: draft.name.trim() } : { name: draft.name.trim(), folder_id: draft.folderId });
       oldExercises = await activeChildren(db, 'routine_exercise', 'routine_id', [routineId]);
       oldSets = await activeChildren(db, 'routine_set', 'routine_exercise_id', oldExercises.map((e) => e.id));
     } else {
-      const routine = prepareCreate(db, 'routine', { name: draft.name.trim(), notes: null, sort_order: 0 }, now);
+      const routine = prepareCreate(db, 'routine', { name: draft.name.trim(), notes: null, sort_order: 0, folder_id: draft.folderId ?? null }, now);
       routineId = routine.id;
       ops.push(routine);
     }
@@ -151,6 +169,8 @@ export async function loadRoutine(db: Database, id: string): Promise<RoutineDraf
   return {
     id: routine.id,
     name: String(raw(routine).name),
+    // só quando há pasta: rotina sem pasta mantém o formato de antes da v6
+    ...(raw(routine).folder_id ? { folderId: String(raw(routine).folder_id) } : {}),
     exercises: exercises.map((re) => {
       const own = sets.filter((s) => raw(s).routine_exercise_id === re.id);
       const first = own[0] ? raw(own[0]) : {};
@@ -166,6 +186,13 @@ export async function loadRoutine(db: Database, id: string): Promise<RoutineDraf
       };
     }),
   };
+}
+
+/** Nomes por id, inclusive de exercício arquivado (a rotina e o histórico continuam mostrando o nome). */
+export async function exerciseNamesByIds(db: Database, ids: readonly string[]): Promise<Map<string, string>> {
+  if (ids.length === 0) return new Map();
+  const rows = await db.get<Model>('exercise').query(Q.where('id', Q.oneOf([...ids]))).fetch();
+  return new Map(rows.map((e) => [e.id, String(raw(e).name)]));
 }
 
 /** Rotinas não excluídas, da mais antiga para a mais nova. */

@@ -18,5 +18,6 @@ export { LivroCaixa, type LivroCaixaProps } from './LivroCaixa';
 export { FaixaRetomar, type FaixaRetomarProps } from './FaixaRetomar';
 export { SemanaCaderno, type SemanaCadernoProps } from './SemanaCaderno';
 export { Alternar, type AlternarProps } from './Alternar';
+export { FaixaFiltros, type FaixaFiltrosProps } from './FaixaFiltros';
 export { MesCaderno, type MesCadernoProps } from './MesCaderno';
 export { GraficoCaderno, type GraficoCadernoProps, type GraficoPoint } from './GraficoCaderno';

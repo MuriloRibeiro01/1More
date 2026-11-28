@@ -13,7 +13,7 @@ describe('migração v4 (nota do exercício)', () => {
   )!;
 
   it('o schema está na versão 4 e o passo cria só exercise_note', () => {
-    expect(schema.version).toBe(4);
+    expect(schema.version).toBeGreaterThanOrEqual(4); // v5 e v6 vêm da T-006c e T-006b
     expect(v4.steps.map((s) => [s.type, s.schema.name])).toEqual([['create_table', 'exercise_note']]);
   });
 

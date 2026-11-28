@@ -2,6 +2,13 @@
 export interface CatalogExercise {
   id: string;
   name: string;
+  /** Chave de `progress.muscles` (ex.: chest). */
+  primaryMuscle?: string | null;
+  /** barbell | dumbbell | cable | machine | bodyweight. */
+  equipmentCode?: string | null;
+  trackingType?: string;
+  /** Criado pela pessoa (RF-12): só este pode ser editado ou arquivado. */
+  isCustom?: boolean;
 }
 
 export interface ExerciseDraft {
@@ -20,6 +27,8 @@ export interface RoutineDraft {
   /** Ausente = rotina nova. */
   id?: string;
   name: string;
+  /** Pasta (RF-24). Ausente = não mexe (rotina existente) ou sem pasta (rotina nova); null = sem pasta. */
+  folderId?: string | null;
   exercises: ExerciseDraft[];
 }
 

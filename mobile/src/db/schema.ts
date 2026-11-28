@@ -19,6 +19,7 @@ export const exerciseTable = tableSchema({
     { name: 'primary_muscle', type: 'string', isOptional: true },
     { name: 'secondary_muscles', type: 'string' }, // JSON: ["triceps","shoulders"]
     { name: 'equipment_code', type: 'string', isOptional: true },
+    { name: 'is_custom', type: 'boolean' }, // v5: exercício criado pela pessoa (RF-12)
     ...syncColumns,
   ],
 });
@@ -29,6 +30,7 @@ export const routineTable = tableSchema({
     { name: 'name', type: 'string' },
     { name: 'notes', type: 'string', isOptional: true },
     { name: 'sort_order', type: 'number' },
+    { name: 'folder_id', type: 'string', isOptional: true, isIndexed: true }, // v6: pasta (RF-24)
     ...syncColumns,
   ],
 });
@@ -109,8 +111,24 @@ export const exerciseNoteTable = tableSchema({
   ],
 });
 
+// Pasta de rotinas (v6). Excluir a pasta é tombstone; as rotinas voltam para "sem pasta".
+export const routineFolderTable = tableSchema({
+  name: 'routine_folder',
+  columns: [{ name: 'name', type: 'string' }, { name: 'sort_order', type: 'number' }, ...syncColumns],
+});
+
 // Ao mudar o schema: suba `version` e adicione o passo correspondente em migrations.ts.
 export const schema = appSchema({
-  version: 4,
-  tables: [exerciseTable, routineTable, routineExerciseTable, routineSetTable, workoutTable, workoutExerciseTable, workoutSetTable, exerciseNoteTable],
+  version: 6,
+  tables: [
+    exerciseTable,
+    routineTable,
+    routineExerciseTable,
+    routineSetTable,
+    workoutTable,
+    workoutExerciseTable,
+    workoutSetTable,
+    exerciseNoteTable,
+    routineFolderTable,
+  ],
 });

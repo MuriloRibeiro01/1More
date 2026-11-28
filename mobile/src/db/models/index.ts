@@ -35,6 +35,10 @@ export class ExerciseNoteModel extends Model {
   static table = 'exercise_note';
 }
 
+export class RoutineFolderModel extends Model {
+  static table = 'routine_folder';
+}
+
 /** Classes dos models para o `new Database`. */
 export const modelClasses: (typeof Model)[] = [
   ExerciseModel,
@@ -45,4 +49,5 @@ export const modelClasses: (typeof Model)[] = [
   WorkoutExerciseModel,
   WorkoutSetModel,
   ExerciseNoteModel,
+  RoutineFolderModel,
 ];

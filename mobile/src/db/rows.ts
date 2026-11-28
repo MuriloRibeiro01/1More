@@ -3,7 +3,7 @@ import { uuidv7 } from './uuid';
 
 // Helpers de linha bruta dos repositórios (rotinas e treino): leitura/escrita pelo raw snake_case, formato do sync.
 
-export type Raw = Record<string, string | number | null>;
+export type Raw = Record<string, string | number | boolean | null>;
 export const raw = (m: Model) => m._raw as unknown as Raw;
 /** Filtro de não excluídas (tombstone = deleted_at preenchido). */
 export const active = Q.where('deleted_at', null);
