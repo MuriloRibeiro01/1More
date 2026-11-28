@@ -21,12 +21,13 @@ import {
   type WorkoutExerciseSnapshot,
   type WorkoutSnapshot,
 } from '../workout/repository';
-import { useRestTimer } from '../workout/restTimer';
+import { useSharedRestTimer } from '../workout/RestTimerProvider';
 import { isForgotten, prsForSet } from '../workout/rules';
 import type { SetLog } from '../workout/types';
 import { size, space, text, useTheme } from '../theme';
+import { contrastRatio } from '../theme/contrast';
 
-type Sheets = null | 'empty' | 'pending' | 'forgot' | { removeId: string; name: string };
+type Sheets = null | 'empty' | 'pending' | 'forgot' | { removeId: string; name: string; exerciseId: string };
 
 const MARGIN_LETTER = { warmup: 'A', drop: 'D', failure: 'F' } as const;
 const lastActivity = (w: WorkoutSnapshot) =>
@@ -40,10 +41,13 @@ export function ActiveWorkoutScreen({ workoutId }: { workoutId: string }) {
   const db = useDatabase();
   const navigation = useNavigation<{
     goBack: () => void;
-    navigate: (name: 'ExercisePicker', params: { workoutId: string }) => void;
+    navigate: {
+      (name: 'ExercisePicker', params: { workoutId: string; replaceWorkoutExerciseId?: string }): void;
+      (name: 'Exercise', params: { exerciseId: string }): void;
+    };
     replace: (name: 'WorkoutSummary', params: { workoutId: string }) => void;
   }>();
-  const timer = useRestTimer();
+  const timer = useSharedRestTimer();
 
   const [workout, setWorkout] = useState<WorkoutSnapshot | null>(null);
   const [sheet, setSheet] = useState<Sheets>(null);
@@ -122,6 +126,8 @@ export function ActiveWorkoutScreen({ workoutId }: { workoutId: string }) {
 
   if (!workout) return <SafeAreaView style={[styles.root, { backgroundColor: c.paper }]} />;
 
+  // C13: UMA faixa no treino inteiro, na primeira série pendente (por exercício e por série).
+  const currentSetId = workout.exercises.flatMap((e) => e.sets).find((s) => s.completedAt === null)?.id ?? null;
   const title = workout.name || t('workout.freeTitle');
   return (
     <SafeAreaView edges={['top', 'left', 'right', 'bottom']} style={[styles.root, { backgroundColor: c.paper }]}>
@@ -137,7 +143,7 @@ export function ActiveWorkoutScreen({ workoutId }: { workoutId: string }) {
                 <IconButton
                   icon="more"
                   label={t('workout.exerciseOptions', { name: ex.name })}
-                  onPress={() => setSheet({ removeId: ex.id, name: ex.name })}
+                  onPress={() => setSheet({ removeId: ex.id, name: ex.name, exerciseId: ex.exerciseId })}
                 />
               </View>
               {ex.sets.map((set, i) => (
@@ -146,6 +152,7 @@ export function ActiveWorkoutScreen({ workoutId }: { workoutId: string }) {
                   n={i + 1}
                   exerciseName={ex.name}
                   set={set}
+                  current={set.id === currentSetId}
                   pr={prs.has(set.id)}
                   onComplete={(values) => complete(ex, set, values)}
                   onUncomplete={() => edit(set.id, { completed: false })}
@@ -225,6 +232,26 @@ export function ActiveWorkoutScreen({ workoutId }: { workoutId: string }) {
       </Sheet>
       <Sheet open={typeof sheet === 'object' && sheet !== null} title={typeof sheet === 'object' && sheet ? sheet.name : undefined} onClose={() => setSheet(null)}>
         <Button
+          block
+          onPress={() => {
+            const target = sheet as { removeId: string };
+            setSheet(null);
+            navigation.navigate('ExercisePicker', { workoutId, replaceWorkoutExerciseId: target.removeId });
+          }}
+        >
+          {t('workout.swapExercise')}
+        </Button>
+        <Button
+          block
+          onPress={() => {
+            const target = sheet as { exerciseId: string };
+            setSheet(null);
+            navigation.navigate('Exercise', { exerciseId: target.exerciseId });
+          }}
+        >
+          {t('workout.viewHistory')}
+        </Button>
+        <Button
           variant="danger"
           block
           onPress={() => {
@@ -250,6 +277,8 @@ interface SetRowProps {
   n: number;
   exerciseName: string;
   set: SetSnapshot;
+  /** Série da vez: faixa amarela; texto em tinta. */
+  current: boolean;
   pr: boolean;
   onComplete: (values: { weightKg: number | null; reps: number }) => void;
   onUncomplete: () => void;
@@ -257,12 +286,14 @@ interface SetRowProps {
 }
 
 /** Uma série = uma linha: número (ou A/D/F) na margem, carga × reps, caixinha. Valores a lápis até confirmar. */
-function SetRow({ n, exerciseName, set, pr, onComplete, onUncomplete, onValues }: SetRowProps) {
+function SetRow({ n, exerciseName, set, current, pr, onComplete, onUncomplete, onValues }: SetRowProps) {
   const { t } = useTranslation();
   const { colors: c } = useTheme();
   const [weight, setWeight] = useState(formatKgInput(set.weightKg));
   const [reps, setReps] = useState(set.reps === null ? '' : String(set.reps));
   const done = set.completedAt !== null;
+  // Valores a lápis; só na faixa, se o lápis sobre stripeWash ficar abaixo de 4,5:1, passam para tinta.
+  const pencil = !done && !(current && contrastRatio(c.inkMuted, c.stripeWash) < 4.5);
 
   // null = texto inválido ou reps vazias: não conclui nem grava.
   const parsed = () => {
@@ -279,6 +310,7 @@ function SetRow({ n, exerciseName, set, pr, onComplete, onUncomplete, onValues }
   const label = (key: 'setLabel' | 'weightLabel' | 'repsLabel') => t(`workout.${key}`, { n, name: exerciseName });
   return (
     <Linha
+      destaque={current}
       margem={<Text style={[styles.marginText, { color: c.ink }]}>{set.type === 'normal' ? n : MARGIN_LETTER[set.type]}</Text>}
     >
       <View style={styles.setRow}>
@@ -288,12 +320,13 @@ function SetRow({ n, exerciseName, set, pr, onComplete, onUncomplete, onValues }
           hideLabel
           ariaLabel={label('weightLabel')}
           unit="kg"
+          unitInk={current}
           value={weight}
-          muted={!done}
+          muted={pencil}
           onChange={setWeight}
           onBlur={save}
         />
-        <Text style={[styles.times, { color: c.inkMuted }]}>×</Text>
+        <Text style={[styles.times, { color: current ? c.ink : c.inkMuted }]}>×</Text>
         <NumberField
           style={styles.flex}
           size="md"
@@ -301,7 +334,7 @@ function SetRow({ n, exerciseName, set, pr, onComplete, onUncomplete, onValues }
           decimal={false}
           ariaLabel={label('repsLabel')}
           value={reps}
-          muted={!done}
+          muted={pencil}
           onChange={setReps}
           onBlur={save}
         />

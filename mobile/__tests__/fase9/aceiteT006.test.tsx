@@ -10,7 +10,6 @@ import { ActiveWorkoutRoute, RootNavigator, type RootStackParamList } from '../.
 import { listCatalog, saveRoutine, seedCatalog } from '../../src/routines/repository';
 import { isForgotten, isPurgeable, STALE_MS } from '../../src/workout/rules';
 import { discardWorkout, finishWorkout, loadWorkout, startWorkout, updateSet } from '../../src/workout/repository';
-import { Linha } from '../../src/components';
 import { colors } from '../../src/theme';
 import { criarBancoDeTeste } from '../../test-utils/db';
 import { renderComTema } from '../../test-utils/render';
@@ -260,27 +259,8 @@ describe('C12 — valores da sessão anterior a lápis e usados ao tocar a caixi
   });
 });
 
-describe('C13 — série da vez com faixa de destaque', () => {
-  // LACUNA (relatada ao Atlas): ActiveWorkoutScreen não passa `destaque` à Linha da série; só o catálogo
-  // (ExercisePickerScreen) usa `destaque`. A faixa amarela existe como componente (caderno.test) e na FaixaRetomar.
-  const temWash = () => {
-    const json = JSON.stringify(screen.toJSON());
-    return json.includes(colors.light.stripeWash) || json.includes(colors.dark.stripeWash);
-  };
-
-  it('controle da sonda: uma Linha com destaque é detectada pela busca na árvore', async () => {
-    await renderComTema(<Linha destaque>{<Text>x</Text>}</Linha>);
-    expect(temWash()).toBe(true);
-  });
-
-  it('sonda: nenhuma parte da árvore do treino ativo usa stripeWash hoje (confirma a lacuna)', async () => {
-    const id = await startWorkout(db, { routineId: rotinaId, now: T0 });
-    await montarTreino(id);
-    await caixa(1);
-    expect(temWash()).toBe(false);
-  });
-  it.todo('a primeira série pendente do treino ativo fica sobre a faixa stripeWash; ao concluí-la a faixa passa para a próxima');
-});
+// C13 (série da vez com faixa): coberto por t006a/serieDaVez.test.tsx desde que a faixa foi implementada;
+// a sonda que confirmava a lacuna aqui foi removida.
 
 describe('C42 — alvos de toque ≥ 48 dp (RNF-09) nas telas principais', () => {
   const interativos = () => [
